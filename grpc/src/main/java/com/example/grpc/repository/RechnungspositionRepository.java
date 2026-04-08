@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 /// Repository für Rechnungspositionen.
-public class PositionRepository {
+public class RechnungspositionRepository {
   private static final String INSERT_POSITION_SQL = """
       INSERT INTO rechnungspositionen (
           rechnung_id, artikelnummer, menge, einzelpreis_betrag,
@@ -20,11 +20,11 @@ public class PositionRepository {
       ) VALUES (?, ?, ?, ?, ?, ?)
       """;
 
-  private static final Logger logger = LoggerFactory.getLogger(PositionRepository.class);
+  private static final Logger logger = LoggerFactory.getLogger(RechnungspositionRepository.class);
 
   private final DataSource dataSource;
 
-  public PositionRepository(final DataSource dataSource) {
+  public RechnungspositionRepository(final DataSource dataSource) {
     this.dataSource = dataSource;
   }
 
