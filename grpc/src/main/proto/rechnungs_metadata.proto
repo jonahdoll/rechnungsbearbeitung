@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option java_package = "com.example.grpc";
+
+service RechnungsmetadatenService {
+
+  rpc SpeicherMetadaten(MetadatenSpeichernRequest) returns (APIResponse);
+}
+
+message Geld {
+  double betrag = 1;
+  string waehrungs_code = 2;
+}
+
+message Rechnungsposition {
+  string artikelnummer = 1;
+  double menge = 2;
+  Geld einzelpreis = 3;
+  double steuersatz = 4;
+}
+
+message MetadatenSpeichernRequest {
+  string rechnungsnummer = 1;
+  google.protobuf.Timestamp rechnungsdatum = 2;
+  string bestellnummer = 3;
+  google.protobuf.Timestamp faelligkeitsdatum = 4;
+  string rechnungsausteller = 5;
+  string rechnungsempfaenger = 6;
+  string steuernummeraussteller = 7;
+  repeated Rechnungsposition positionen = 8;
+  string iban = 9;
+  string bic = 10;
+}
+
+message APIResponse {
+  string responsemessage = 1;
+  int32 responseCode = 2;
+}
