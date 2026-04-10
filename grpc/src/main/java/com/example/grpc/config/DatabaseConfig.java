@@ -10,7 +10,7 @@ public class DatabaseConfig {
     private static final HikariDataSource dataSource;
 
     static {
-        Dotenv dotenv = Dotenv.load();
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(dotenv.get("DB_URL"));
