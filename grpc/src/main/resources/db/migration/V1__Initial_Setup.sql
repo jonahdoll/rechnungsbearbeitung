@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 CREATE TABLE IF NOT EXISTS rechnungsmetadaten (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     rechnungsnummer VARCHAR(255) NOT NULL UNIQUE,
