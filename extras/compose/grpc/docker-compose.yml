@@ -1,0 +1,41 @@
+services:
+  grpc-server:
+    image: grpcservice
+    container_name: rechnungsbearbeitung-grpc
+    ports:
+      - "50051:50051"
+    environment:
+      - DB_URL=jdbc:postgresql://postgres:5432/${DB_NAME}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_CLEAN=false
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - rechnungsbearbeitung-network
+    restart: unless-stopped
+
+  postgres:
+    image: "postgres:latest"
+    container_name: rechnungsbearbeitung-db
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - ./db-data:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rechnungsbearbeitung-network
+    restart: unless-stopped
+
+networks:
+  rechnungsbearbeitung-network:
+    name: rechnungsbearbeitung-network
