@@ -41,3 +41,6 @@ build/
 .env
 
 dependency-reduced-pom.xml
+
+**/db-data/
+**/rabbitmq-data/
