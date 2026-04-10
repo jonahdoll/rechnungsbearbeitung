@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.Executors;
 
 /// gRPC-Server für den Rechnungsservice.
 public class GrpcServer {
@@ -20,16 +21,14 @@ public class GrpcServer {
         logger.info("Server wird gestartet...");
 
         Server server = ServerBuilder.forPort(PORT)
+                .executor(Executors.newVirtualThreadPerTaskExecutor())
                 .addService(new RechnungsmetadatenService())
                 .build();
 
         server.start();
         logger.info("gRPC-Server gestartet auf Port {}", PORT);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Server wird heruntergefahren...");
-            server.shutdown();
-        }));
+        Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
 
         server.awaitTermination();
     }
