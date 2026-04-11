@@ -11,7 +11,7 @@ public class DatabaseMigration {
 
     public static void migrate() {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-        boolean shouldClean = Boolean.parseBoolean(dotenv.get("DB_CLEAN", "false"));
+        boolean shouldClean = Boolean.parseBoolean(dotenv.get("GRPC_DB_CLEAN", "false"));
 
         logger.info("Starte Datenbank Migration...");
 
