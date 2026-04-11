@@ -13,6 +13,10 @@ public record Zahlungsauftrag(
         @Positive
         double betrag,
 
+        @NotBlank
+        @Pattern(regexp = "^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$")
+        String iban,
+
         @NotNull
         LocalDateTime zeitstempel
 ) {
