@@ -16,8 +16,8 @@ public class RechnungspositionRepository {
   private static final String INSERT_POSITION_SQL = """
       INSERT INTO rechnungspositionen (
           rechnung_id, artikelnummer, menge, einzelpreis_betrag,
-          einzelpreis_waehrung, steuersatz
-      ) VALUES (?, ?, ?, ?, ?, ?)
+          waehrung
+      ) VALUES (?, ?, ?, ?, ?)
       """;
 
   private static final Logger logger = LoggerFactory.getLogger(RechnungspositionRepository.class);
@@ -50,11 +50,10 @@ public class RechnungspositionRepository {
 
   private void insertPosition(final PreparedStatement stmt, final UUID rechnungsId, final Rechnungsposition position) throws SQLException {
     stmt.setObject(1, rechnungsId);
-    stmt.setString(2, position.getArtikelnummer());
-    stmt.setBigDecimal(3, position.getMenge());
-    stmt.setBigDecimal(4, position.getEinzelpreisBetrag());
-    stmt.setString(5, position.getEinzelpreisWaehrung());
-    stmt.setBigDecimal(6, position.getSteuersatz());
+    stmt.setString(2, position.artikelnummer());
+    stmt.setBigDecimal(3, position.menge());
+    stmt.setBigDecimal(4, position.einzelpreisBetrag());
+    stmt.setString(5, position.waehrung());
     stmt.addBatch();
   }
 }
