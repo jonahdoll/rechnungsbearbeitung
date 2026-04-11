@@ -13,9 +13,9 @@ public class DatabaseConfig {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(dotenv.get("DB_URL"));
-        config.setUsername(dotenv.get("DB_USERNAME"));
-        config.setPassword(dotenv.get("DB_PASSWORD"));
+        config.setJdbcUrl(dotenv.get("GRPC_DB_URL"));
+        config.setUsername(dotenv.get("GRPC_DB_USERNAME"));
+        config.setPassword(dotenv.get("GRPC_DB_PASSWORD"));
         config.setMaximumPoolSize(10);
 
         dataSource = new HikariDataSource(config);
