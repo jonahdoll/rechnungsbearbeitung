@@ -5,10 +5,7 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -24,7 +21,6 @@ public record Rechnungsmetadaten(
         String rechnungsnummer,
         @NotNull
         LocalDateTime rechnungsdatum,
-        String bestellnummer,
         LocalDateTime faelligkeitsdatum,
         @NotBlank
         String rechnungsausteller,
@@ -35,7 +31,10 @@ public record Rechnungsmetadaten(
         List<Rechnungsposition> positionen,
         @NotBlank
         @Pattern(regexp = "^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$")
-        String iban
+        String iban,
+        @NotBlank
+        @Size(max = 11)
+        String bic
 ) {
     private static final Validator VALIDATOR = Validation.buildDefaultValidatorFactory().getValidator();
 
@@ -49,12 +48,12 @@ public record Rechnungsmetadaten(
                 UUID.randomUUID(),
                 req.getRechnungsnummer(),
                 convertTimestamp(req.getRechnungsdatum()),
-                req.getBestellnummer(),
                 req.hasFaelligkeitsdatum() ? convertTimestamp(req.getFaelligkeitsdatum()) : null,
                 req.getRechnungsausteller(),
                 req.getRechnungsempfaenger(),
                 req.getPositionenList().stream().map(Rechnungsposition::fromProto).toList(),
-                req.getIban()
+                req.getIban(),
+                req.getBic()
         );
     }
 
