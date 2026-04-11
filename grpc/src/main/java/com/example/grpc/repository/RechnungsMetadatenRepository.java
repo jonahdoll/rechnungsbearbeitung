@@ -13,8 +13,8 @@ public class RechnungsMetadatenRepository {
   private static final String INSERT_RECHNUNG_SQL = """
       INSERT INTO rechnungsmetadaten (
           rechnungsnummer, rechnungsdatum, faelligkeitsdatum,
-          rechnungsausteller, rechnungsempfaenger, steuernummeraussteller, iban, bic
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          rechnungsausteller, rechnungsempfaenger, iban, bic
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
       RETURNING id
       """;
 
