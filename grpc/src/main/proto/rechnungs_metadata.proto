@@ -18,18 +18,17 @@ message Rechnungsposition {
   string artikelnummer = 1;
   double menge = 2;
   Geld einzelpreis = 3;
-  double steuersatz = 4;
 }
 
 message MetadatenSpeichernRequest {
   string rechnungsnummer = 1;
   google.protobuf.Timestamp rechnungsdatum = 2;
-  string bestellnummer = 3;
-  google.protobuf.Timestamp faelligkeitsdatum = 4;
-  string rechnungsausteller = 5;
-  string rechnungsempfaenger = 6;
-  repeated Rechnungsposition positionen = 7;
-  string iban = 8;
+  google.protobuf.Timestamp faelligkeitsdatum = 3;
+  string rechnungsausteller = 4;
+  string rechnungsempfaenger = 5;
+  repeated Rechnungsposition positionen = 6;
+  string iban = 7;
+  string bic = 8;
 }
 
 message APIResponse {
