@@ -25,7 +25,12 @@ public record Zahlungsauftrag(
 ) {
     private static final Validator VALIDATOR = Validation.buildDefaultValidatorFactory().getValidator();
 
-    public Zahlungsauftrag {
+    public Zahlungsauftrag(String zahlungsReferenz, BigDecimal betrag, String iban, LocalDateTime faelligkeitsdatum) {
+        this.zahlungsReferenz = zahlungsReferenz;
+        this.betrag = betrag;
+        this.iban = iban;
+        this.faelligkeitsdatum = faelligkeitsdatum;
+
         var violations = VALIDATOR.validate(this);
         if (!violations.isEmpty()) {
             String fehler = violations.stream()
