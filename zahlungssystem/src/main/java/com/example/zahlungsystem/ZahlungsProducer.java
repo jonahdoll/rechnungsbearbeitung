@@ -1,6 +1,6 @@
 package com.example.zahlungsystem;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.zahlungsystem.entity.Zahlungsauftrag;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.rabbitmq.client.Connection;
