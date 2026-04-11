@@ -12,7 +12,7 @@ import java.util.UUID;
 public class RechnungsMetadatenRepository {
   private static final String INSERT_RECHNUNG_SQL = """
       INSERT INTO rechnungsmetadaten (
-          rechnungsnummer, rechnungsdatum, bestellnummer, faelligkeitsdatum,
+          rechnungsnummer, rechnungsdatum, faelligkeitsdatum,
           rechnungsausteller, rechnungsempfaenger, steuernummeraussteller, iban, bic
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       RETURNING id
@@ -33,22 +33,20 @@ public class RechnungsMetadatenRepository {
   /// @return Die generierte Rechnungs-ID.
   /// @throws SQLException wenn ein Datenbankfehler auftritt.
   public UUID save(final Connection conn, final Rechnungsmetadaten rechnung) throws SQLException {
-    logger.debug("rechnungsnummer={}", rechnung.getRechnungsnummer());
+    logger.debug("rechnungsnummer={}", rechnung.rechnungsnummer());
     return insertRechnung(conn, rechnung);
   }
 
   private UUID insertRechnung(final Connection conn, final Rechnungsmetadaten rechnung) throws SQLException {
     try (PreparedStatement stmt = conn.prepareStatement(INSERT_RECHNUNG_SQL)) {
-      stmt.setString(1, rechnung.getRechnungsnummer());
-      stmt.setTimestamp(2, Timestamp.valueOf(rechnung.getRechnungsdatum()));
-      stmt.setString(3, rechnung.getBestellnummer());
-      stmt.setTimestamp(4, rechnung.getFaelligkeitsdatum() != null
-          ? Timestamp.valueOf(rechnung.getFaelligkeitsdatum()) : null);
-      stmt.setString(5, rechnung.getRechnungsausteller());
-      stmt.setString(6, rechnung.getRechnungsempfaenger());
-      stmt.setString(7, rechnung.getSteuernummeraussteller());
-      stmt.setString(8, rechnung.getIban());
-      stmt.setString(9, rechnung.getBic());
+      stmt.setString(1, rechnung.rechnungsnummer());
+      stmt.setTimestamp(2, Timestamp.valueOf(rechnung.rechnungsdatum()));
+      stmt.setTimestamp(3, rechnung.faelligkeitsdatum() != null
+          ? Timestamp.valueOf(rechnung.faelligkeitsdatum()) : null);
+      stmt.setString(4, rechnung.rechnungsausteller());
+      stmt.setString(5, rechnung.rechnungsempfaenger());
+      stmt.setString(6, rechnung.iban());
+      stmt.setString(7, rechnung.bic());
 
       try (ResultSet result = stmt.executeQuery()) {
         if (result.next()) {
