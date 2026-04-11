@@ -28,10 +28,8 @@ message MetadatenSpeichernRequest {
   google.protobuf.Timestamp faelligkeitsdatum = 4;
   string rechnungsausteller = 5;
   string rechnungsempfaenger = 6;
-  string steuernummeraussteller = 7;
-  repeated Rechnungsposition positionen = 8;
-  string iban = 9;
-  string bic = 10;
+  repeated Rechnungsposition positionen = 7;
+  string iban = 8;
 }
 
 message APIResponse {
