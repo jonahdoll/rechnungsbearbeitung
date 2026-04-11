@@ -13,34 +13,40 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record Rechnungsposition(
-        @NotNull
-        UUID id,
-        @NotBlank
-        String artikelnummer,
-        @Positive
-        @NotNull
-        BigDecimal menge,
-        @Positive
-        @NotNull
-        BigDecimal einzelpreisBetrag,
-        @NotBlank
-        @Pattern(regexp = "[A-Z]{3}")
-        String waehrung
+    UUID id,
+    @NotBlank
+    String artikelnummer,
+    @Positive
+    @NotNull
+    BigDecimal menge,
+    @Positive
+    @NotNull
+    BigDecimal einzelpreisBetrag,
+    @NotBlank
+    @Pattern(regexp = "[A-Z]{3}")
+    String waehrung
 ) {
     private static final Validator VALIDATOR = Validation.buildDefaultValidatorFactory().getValidator();
 
-    public Rechnungsposition {
+    public Rechnungsposition(UUID id, String artikelnummer, BigDecimal menge,
+                             BigDecimal einzelpreisBetrag, String waehrung) {
+        this.id = id != null ? id : UUID.randomUUID();
+        this.artikelnummer = artikelnummer;
+        this.menge = menge;
+        this.einzelpreisBetrag = einzelpreisBetrag;
+        this.waehrung = waehrung;
+
         var violations = VALIDATOR.validate(this);
         if (!violations.isEmpty()) throw new ConstraintViolationException(violations);
     }
 
     public static Rechnungsposition fromProto(RechnungsMetadata.Rechnungsposition proto) {
         return new Rechnungsposition(
-                UUID.randomUUID(),
-                proto.getArtikelnummer(),
-                BigDecimal.valueOf(proto.getMenge()),
-                BigDecimal.valueOf(proto.getEinzelpreis().getBetrag()),
-                proto.getEinzelpreis().getWaehrungsCode()
+            UUID.randomUUID(),
+            proto.getArtikelnummer(),
+            BigDecimal.valueOf(proto.getMenge()),
+            BigDecimal.valueOf(proto.getEinzelpreis().getBetrag()),
+            proto.getEinzelpreis().getWaehrungsCode()
         );
     }
 }
