@@ -10,7 +10,6 @@ import jakarta.validation.constraints.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import com.example.grpc.entity.Rechnungsposition;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,7 +37,20 @@ public record Rechnungsmetadaten(
 ) {
     private static final Validator VALIDATOR = Validation.buildDefaultValidatorFactory().getValidator();
 
-    public Rechnungsmetadaten {
+    public Rechnungsmetadaten(UUID id, String rechnungsnummer, LocalDateTime rechnungsdatum,
+                              LocalDateTime faelligkeitsdatum, String rechnungsausteller,
+                              String rechnungsempfaenger, List<Rechnungsposition> positionen,
+                              String iban, String bic) {
+        this.id = id;
+        this.rechnungsnummer = rechnungsnummer;
+        this.rechnungsdatum = rechnungsdatum;
+        this.faelligkeitsdatum = faelligkeitsdatum;
+        this.rechnungsausteller = rechnungsausteller;
+        this.rechnungsempfaenger = rechnungsempfaenger;
+        this.positionen = positionen;
+        this.iban = iban;
+        this.bic = bic;
+
         var violations = VALIDATOR.validate(this);
         if (!violations.isEmpty()) throw new ConstraintViolationException(violations);
     }
