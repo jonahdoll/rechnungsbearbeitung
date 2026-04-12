@@ -3,25 +3,24 @@ package com.example.grpc.config;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.cdimascio.dotenv.Dotenv;
-
 import javax.sql.DataSource;
 
 public class DatabaseConfig {
-    private static final HikariDataSource dataSource;
+  private static final HikariDataSource dataSource;
 
-    static {
-        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+  static {
+    Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(dotenv.get("GRPC_DB_URL"));
-        config.setUsername(dotenv.get("GRPC_DB_USERNAME"));
-        config.setPassword(dotenv.get("GRPC_DB_PASSWORD"));
-        config.setMaximumPoolSize(10);
+    HikariConfig config = new HikariConfig();
+    config.setJdbcUrl(dotenv.get("GRPC_DB_URL"));
+    config.setUsername(dotenv.get("GRPC_DB_USERNAME"));
+    config.setPassword(dotenv.get("GRPC_DB_PASSWORD"));
+    config.setMaximumPoolSize(10);
 
-        dataSource = new HikariDataSource(config);
-    }
+    dataSource = new HikariDataSource(config);
+  }
 
-    public static DataSource getInstance() {
-        return dataSource;
-    }
+  public static DataSource getInstance() {
+    return dataSource;
+  }
 }

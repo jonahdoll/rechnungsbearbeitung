@@ -1,16 +1,16 @@
 package com.example.grpc.repository;
 
 import com.example.grpc.entity.Rechnungsmetadaten;
+import java.sql.*;
+import java.util.UUID;
+import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
-import java.sql.*;
-import java.util.UUID;
-
 /// Repository für Rechnungen.
 public class RechnungsMetadatenRepository {
-  private static final String INSERT_RECHNUNG_SQL = """
+  private static final String INSERT_RECHNUNG_SQL =
+      """
       INSERT INTO rechnungsmetadaten (
           rechnungsnummer, rechnungsdatum, faelligkeitsdatum,
           rechnungsausteller, rechnungsempfaenger, iban, bic
@@ -37,12 +37,16 @@ public class RechnungsMetadatenRepository {
     return insertRechnung(conn, rechnung);
   }
 
-  private UUID insertRechnung(final Connection conn, final Rechnungsmetadaten rechnung) throws SQLException {
+  private UUID insertRechnung(final Connection conn, final Rechnungsmetadaten rechnung)
+      throws SQLException {
     try (PreparedStatement stmt = conn.prepareStatement(INSERT_RECHNUNG_SQL)) {
       stmt.setString(1, rechnung.rechnungsnummer());
       stmt.setTimestamp(2, Timestamp.valueOf(rechnung.rechnungsdatum()));
-      stmt.setTimestamp(3, rechnung.faelligkeitsdatum() != null
-          ? Timestamp.valueOf(rechnung.faelligkeitsdatum()) : null);
+      stmt.setTimestamp(
+          3,
+          rechnung.faelligkeitsdatum() != null
+              ? Timestamp.valueOf(rechnung.faelligkeitsdatum())
+              : null);
       stmt.setString(4, rechnung.rechnungsausteller());
       stmt.setString(5, rechnung.rechnungsempfaenger());
       stmt.setString(6, rechnung.iban());

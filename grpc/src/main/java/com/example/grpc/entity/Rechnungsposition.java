@@ -8,45 +8,40 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
 public record Rechnungsposition(
     UUID id,
-    @NotBlank
-    String artikelnummer,
-    @Positive
-    @NotNull
-    BigDecimal menge,
-    @Positive
-    @NotNull
-    BigDecimal einzelpreisBetrag,
-    @NotBlank
-    @Pattern(regexp = "[A-Z]{3}")
-    String waehrung
-) {
-    private static final Validator VALIDATOR = Validation.buildDefaultValidatorFactory().getValidator();
+    @NotBlank String artikelnummer,
+    @Positive @NotNull BigDecimal menge,
+    @Positive @NotNull BigDecimal einzelpreisBetrag,
+    @NotBlank @Pattern(regexp = "[A-Z]{3}") String waehrung) {
+  private static final Validator VALIDATOR =
+      Validation.buildDefaultValidatorFactory().getValidator();
 
-    public Rechnungsposition(UUID id, String artikelnummer, BigDecimal menge,
-                             BigDecimal einzelpreisBetrag, String waehrung) {
-        this.id = id != null ? id : UUID.randomUUID();
-        this.artikelnummer = artikelnummer;
-        this.menge = menge;
-        this.einzelpreisBetrag = einzelpreisBetrag;
-        this.waehrung = waehrung;
+  public Rechnungsposition(
+      UUID id,
+      String artikelnummer,
+      BigDecimal menge,
+      BigDecimal einzelpreisBetrag,
+      String waehrung) {
+    this.id = id != null ? id : UUID.randomUUID();
+    this.artikelnummer = artikelnummer;
+    this.menge = menge;
+    this.einzelpreisBetrag = einzelpreisBetrag;
+    this.waehrung = waehrung;
 
-        var violations = VALIDATOR.validate(this);
-        if (!violations.isEmpty()) throw new ConstraintViolationException(violations);
-    }
+    var violations = VALIDATOR.validate(this);
+    if (!violations.isEmpty()) throw new ConstraintViolationException(violations);
+  }
 
-    public static Rechnungsposition fromProto(RechnungsMetadata.Rechnungsposition proto) {
-        return new Rechnungsposition(
-            UUID.randomUUID(),
-            proto.getArtikelnummer(),
-            BigDecimal.valueOf(proto.getMenge()),
-            BigDecimal.valueOf(proto.getEinzelpreis().getBetrag()),
-            proto.getEinzelpreis().getWaehrungsCode()
-        );
-    }
+  public static Rechnungsposition fromProto(RechnungsMetadata.Rechnungsposition proto) {
+    return new Rechnungsposition(
+        UUID.randomUUID(),
+        proto.getArtikelnummer(),
+        BigDecimal.valueOf(proto.getMenge()),
+        BigDecimal.valueOf(proto.getEinzelpreis().getBetrag()),
+        proto.getEinzelpreis().getWaehrungsCode());
+  }
 }
