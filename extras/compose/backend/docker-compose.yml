@@ -1,0 +1,3 @@
+include:
+  - path: ../grpc/docker-compose.yml
+  - path: ../zahlungssystem/docker-compose.yml
