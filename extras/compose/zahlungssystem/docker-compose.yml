@@ -1,0 +1,25 @@
+services:
+  database-zahlungssystem:
+    image: "postgres:latest"
+
+    ports:
+      - ${ZAHLUNGSSYSTEM_DB_PORT}:5432
+
+    environment:
+      POSTGRES_USER: ${ZAHLUNGSSYSTEM_DB_USERNAME}
+      POSTGRES_PASSWORD: ${ZAHLUNGSSYSTEM_DB_PASSWORD}
+      POSTGRES_DB: ${ZAHLUNGSSYSTEM_DB_NAME}
+
+    volumes:
+      - ./db-data/:/var/lib/postgresql
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - ./rabbitmq-data:/var/lib/rabbitmq
