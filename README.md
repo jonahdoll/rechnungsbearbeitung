@@ -342,7 +342,7 @@ Rechnungsbearbeitung System
 
 ---
 
-**Letzte Aktualisierung**: April 2026
+**Letzte Aktualisierung**: April 2026 (1 Sprint)
 ```
 
 Diese README bietet:
