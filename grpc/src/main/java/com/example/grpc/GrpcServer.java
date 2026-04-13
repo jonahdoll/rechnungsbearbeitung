@@ -10,7 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /// gRPC-Server für den Rechnungsservice.
-public class GrpcServer {
+public class
+GrpcServer {
   private static final Logger logger = LoggerFactory.getLogger(GrpcServer.class);
   private static final int PORT = 50051;
 

@@ -1,4 +1,4 @@
-package com.example.zahlungsystem;
+package com.example.client;
 
 import com.example.zahlungsystem.entity.Zahlungsauftrag;
 import com.fasterxml.jackson.databind.json.JsonMapper;
