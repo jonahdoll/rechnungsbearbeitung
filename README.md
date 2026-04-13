@@ -23,11 +23,17 @@ Das System besteht aus drei Hauptkomponenten:
 
 ### 1. Repository klonen
 
-```bash
 git clone <repository-url>
 cd rechnungsbearbeitung
 
 # 2. Umgebungsvariablen konfigurieren
 cp example.env .env
 
+Die .env-Datei enthält bereits die richtigen Standard-Konfigurationen:
+PostgreSQL für gRPC auf Port 5432
+PostgreSQL für Zahlungssystem auf Port 5433
+RabbitMQ auf Port 5672
+
+# 3. Docker-Services starten
+docker-compose -f extras/compose/backend/docker-compose.yml up -d
 
