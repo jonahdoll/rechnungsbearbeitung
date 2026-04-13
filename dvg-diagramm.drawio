@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net">
   <diagram name="Seite-1" id="FrbvSXrtWYrJWMeBhsf8">
-    <mxGraphModel dx="1222" dy="790" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1018" dy="615" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -28,11 +28,11 @@
         <mxCell id="aQUwOYMixU6fh9KfqHJf-12" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="Liest Rechnungen aus rechnungen.xml, sendet Metadaten per gRPC an den gleichnamigen Microservice und stellt bei Erfolg einen Zahlungsauftrag in die RabbitMQ-Queue." vertex="1">
           <mxGeometry height="60" width="340" x="240" y="80" as="geometry" />
         </mxCell>
-        <mxCell id="aQUwOYMixU6fh9KfqHJf-13" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="Empfängt Rechnungsmetadaten, validiert sie und speichert sie in der PostgreSQL-Datenbank. Antwortet synchron mit Erfolg oder Fehler." vertex="1">
-          <mxGeometry height="60" width="340" x="360" y="210" as="geometry" />
+        <mxCell id="aQUwOYMixU6fh9KfqHJf-13" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="Empfängt Rechnungsmetadaten, validiert sie und speichert sie in der PostgreSQL-Datenbank. Antwortet synchron mit Erfolg oder Fehler. (Rechnungsdatum, Empfänger, IBAN, etc...)" vertex="1">
+          <mxGeometry height="60" width="370" x="360" y="210" as="geometry" />
         </mxCell>
-        <mxCell id="aQUwOYMixU6fh9KfqHJf-14" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="Puffert Zahlungsaufträge als JSON-Nachrichten asynchron zwischen Client und Zahlungssystem indem er die Aufträge nach einander in eine Queue einreiht. Stellt bei Fehlern Nachrichten erneut zu." vertex="1">
-          <mxGeometry height="60" width="440" x="200" y="320" as="geometry" />
+        <mxCell id="aQUwOYMixU6fh9KfqHJf-14" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="Puffert Zahlungsaufträge als JSON-Nachrichten asynchron zwischen Client und Zahlungssystem indem er die Aufträge nach einander in eine Queue einreiht. Stellt bei Fehlern Nachrichten erneut zu. (Rechnungsnummer, Betrag, IBAN, etc...)" vertex="1">
+          <mxGeometry height="60" width="530" x="200" y="320" as="geometry" />
         </mxCell>
         <mxCell id="aQUwOYMixU6fh9KfqHJf-15" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="Konsumiert Zahlungsaufträge aus der Queue, speichert und verarbeitet sie (AUSSTEHEND → IN_BEARBEITUNG → ABGESCHLOSSEN/FEHLGESCHLAGEN). Bestätigt oder verwirft Nachrichten per Ack/Nack." vertex="1">
           <mxGeometry height="60" width="480" x="240" y="560" as="geometry" />
