@@ -1,6 +1,5 @@
 package com.example.client;
 
-import com.example.zahlungsystem.ZahlungsProducer;
 import com.example.zahlungsystem.entity.Zahlungsauftrag;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
