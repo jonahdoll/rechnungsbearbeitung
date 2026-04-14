@@ -2,7 +2,7 @@
 
 Ein verteiltes System zur automatisierten Rechnungsbearbeitung und Zahlungsverarbeitung, das auf Java, gRPC, RabbitMQ und PostgreSQL basiert.
 
-## 📋 Projektübersicht
+## Projektübersicht
 
 Das System besteht aus drei Hauptkomponenten:
 
@@ -10,7 +10,7 @@ Das System besteht aus drei Hauptkomponenten:
 2. **Zahlungssystem**: Verarbeitet Zahlungsaufträge über RabbitMQ und speichert sie in einer separaten PostgreSQL-Datenbank
 3. **Client**: Liest Rechnungen aus XML-Dateien, sendet sie an den gRPC-Server und erzeugt Zahlungsaufträge
 
-## 🏗️ Systemarchitektur
+## Systemarchitektur
 
 ```
 Client
@@ -28,14 +28,14 @@ Zahlungssystem
 Database (Zahlungssystem) auf Port 5433
 ```
 
-## ⚙️ Voraussetzungen
+## Voraussetzungen
 
 - **Java 25+** (oder Ihre unterstützte JDK-Version)
 - **Maven 3.8+**
 - **Docker & Docker Compose**
 - **Git**
 
-## 🚀 Schnellstart
+## Schnellstart
 
 ### 1. Repository klonen
 
@@ -107,7 +107,7 @@ mvn -pl client exec:java -Dexec.mainClass="com.example.client.ClientApplication"
 
 Der Client liest Rechnungen aus `client/src/main/resources/rechnungen.xml`, sendet diese an den gRPC-Server und erzeugt Zahlungsaufträge.
 
-## 📊 Verarbeitung im Detail
+## Verarbeitung im Detail
 
 ### Ablauf einer Rechnungsverarbeitung:
 
@@ -118,7 +118,7 @@ Der Client liest Rechnungen aus `client/src/main/resources/rechnungen.xml`, send
 5. **Consumer**: Der Zahlungssystem-Consumer verarbeitet die Zahlungsaufträge
 6. **Speicherung & Verarbeitung**: Zahlungsaufträge werden mit Status verfolgt (AUSSTEHEND → IN_BEARBEITUNG → ABGESCHLOSSEN/FEHLGESCHLAGEN)
 
-## 🗄️ Datenbanken
+## Datenbanken
 
 ### gRPC-Datenbank
 
@@ -146,7 +146,7 @@ Verbindung testen:
 psql -h localhost -U kunde -d zahlungssystem
 ```
 
-## 📬 RabbitMQ
+## RabbitMQ
 
 - **Host**: localhost
 - **Port**: 5672 (AMQP)
@@ -160,7 +160,7 @@ Management-UI öffnen:
 http://localhost:15672
 ```
 
-## 🧹 Aufräumen
+## Aufräumen
 
 ### Services stoppen und entfernen
 
@@ -174,7 +174,7 @@ docker-compose -f extras/compose/backend/docker-compose.yml down
 docker-compose -f extras/compose/backend/docker-compose.yml down -v
 ```
 
-## 🛠️ Entwicklung
+## Entwicklung
 
 ### Code formatieren
 
@@ -202,7 +202,7 @@ mvn -pl client clean install
 
 Die Logs werden in die Konsole geschrieben. Für gRPC und Consumer verwenden Sie die Standard-Log-Ausgabe.
 
-## 📁 Projektstruktur
+## Projektstruktur
 
 ```
 rechnungsbearbeitung/
@@ -239,7 +239,7 @@ rechnungsbearbeitung/
 └── README.md                      # Diese Datei
 ```
 
-## 📝 Konfiguration
+## Konfiguration
 
 Bearbeiten Sie die `.env`-Datei, um die Konfiguration anzupassen:
 
@@ -268,7 +268,7 @@ ZAHLUNGSSYSTEM_DB_PASSWORD=p
 ZAHLUNGSSYSTEM_DB_NAME=zahlungssystem
 ```
 
-## 🔍 Debugging
+## Debugging
 
 ### Logs in den Services überprüfen
 
@@ -296,7 +296,7 @@ psql -h localhost -U kunde -d zahlungssystem -c "SELECT * FROM zahlungsauftraege
 http://localhost:15672 (Benutzer: kunde, Passwort: p)
 ```
 
-## ⚠️ Häufige Probleme
+## Häufige Probleme
 
 ### Problem: "Connection refused" beim Start von gRPC oder Consumer
 
@@ -325,18 +325,18 @@ mvn clean install
 
 **Lösung**: Stellen Sie sicher, dass `GRPC_DB_CLEAN=true` und `ZAHLUNGSSYSTEM_DB_CLEAN=true` in der `.env`-Datei gesetzt sind.
 
-## 📖 Zusätzliche Ressourcen
+## Zusätzliche Ressourcen
 
 - [gRPC Dokumentation](https://grpc.io/docs/)
 - [RabbitMQ Tutorials](https://www.rabbitmq.com/getstarted.html)
 - [PostgreSQL Dokumentation](https://www.postgresql.org/docs/)
 - [Maven Dokumentation](https://maven.apache.org/)
 
-## 📄 Lizenz
+## Lizenz
 
 Siehe [LICENSE](LICENSE) Datei.
 
-## 👤 Gruppe 1
+## Gruppe 1
 
 Rechnungsbearbeitung System
 
@@ -358,7 +358,7 @@ Diese README bietet:
 Du kannst diese README jetzt in dein Projekt kopieren und auf GitHub pushen!
 ```
 
----🤖 KI-Hinweis
+---KI-Hinweis
 Dieses Projekt und die zugehörige Dokumentation wurden durch die Unterstützung von Künstlicher Intelligenz (Gemini) optimiert und strukturiert. Die KI wurde gezielt eingesetzt, um:
 
 Die Architektur-Dokumentation zu strukturieren.
