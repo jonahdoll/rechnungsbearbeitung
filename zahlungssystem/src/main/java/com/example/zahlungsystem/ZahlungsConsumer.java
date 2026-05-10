@@ -49,12 +49,12 @@ public class ZahlungsConsumer {
       logger.info("ZahlungsConsumer bereit. Warte auf Nachrichten in '{}'...", queue);
 
       DeliverCallback deliverCallback =
-          (_, delivery) -> {
+          (consumerTag, delivery) -> {
             String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
             processMessage(channel, delivery.getEnvelope().getDeliveryTag(), message);
           };
 
-      channel.basicConsume(queue, false, deliverCallback, _ -> {});
+      channel.basicConsume(queue, false, deliverCallback, consumerTag -> {});
 
       Thread.currentThread().join();
     } catch (InterruptedException e) {

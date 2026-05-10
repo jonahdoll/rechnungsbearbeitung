@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:zeebe="http://camunda.org/schema/zeebe/1.0"
+                  id="Definitions_Rechnungsbearbeitung"
+                  targetNamespace="http://example.com/rechnungsbearbeitung">
+  <bpmn:process id="rechnungsbearbeitung" name="Rechnungsbearbeitung" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_RechnungGespeichert" name="Rechnung gespeichert">
+      <bpmn:outgoing>Flow_Zahlungsauftrag</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_RabbitMqZahlungsauftrag" name="Zahlungsauftrag an RabbitMQ senden">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="rabbitmq-zahlungsauftrag" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Zahlungsauftrag</bpmn:incoming>
+      <bpmn:outgoing>Flow_Ende</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_ZahlungsauftragGesendet" name="Zahlungsauftrag gesendet">
+      <bpmn:incoming>Flow_Ende</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Zahlungsauftrag" sourceRef="StartEvent_RechnungGespeichert" targetRef="Task_RabbitMqZahlungsauftrag" />
+    <bpmn:sequenceFlow id="Flow_Ende" sourceRef="Task_RabbitMqZahlungsauftrag" targetRef="EndEvent_ZahlungsauftragGesendet" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Rechnungsbearbeitung">
+    <bpmndi:BPMNPlane id="BPMNPlane_Rechnungsbearbeitung" bpmnElement="rechnungsbearbeitung">
+      <bpmndi:BPMNShape id="StartEvent_RechnungGespeichert_di" bpmnElement="StartEvent_RechnungGespeichert">
+        <dc:Bounds x="160" y="100" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RabbitMqZahlungsauftrag_di" bpmnElement="Task_RabbitMqZahlungsauftrag">
+        <dc:Bounds x="260" y="78" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_ZahlungsauftragGesendet_di" bpmnElement="EndEvent_ZahlungsauftragGesendet">
+        <dc:Bounds x="550" y="100" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_Zahlungsauftrag_di" bpmnElement="Flow_Zahlungsauftrag">
+        <di:waypoint x="196" y="118" />
+        <di:waypoint x="260" y="118" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Ende_di" bpmnElement="Flow_Ende">
+        <di:waypoint x="480" y="118" />
+        <di:waypoint x="550" y="118" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

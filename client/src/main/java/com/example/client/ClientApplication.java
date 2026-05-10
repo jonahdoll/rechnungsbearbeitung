@@ -21,7 +21,11 @@ public class ClientApplication {
 
   public static void main(String[] args) {
     try (var executor = Executors.newVirtualThreadPerTaskExecutor();
-        var client = new RechnungClient()) {
+        var client = new RechnungClient();
+        var camunda = new CamundaProzessClient()) {
+
+      camunda.pruefeVerbindung();
+      camunda.deployeProzess();
 
       Rechnungen rechnungen =
           xmlMapper.readValue(
@@ -29,7 +33,7 @@ public class ClientApplication {
 
       rechnungen
           .getRechnungen()
-          .forEach(rechnung -> executor.submit(() -> verarbeite(client, rechnung)));
+          .forEach(rechnung -> executor.submit(() -> verarbeite(client, camunda, rechnung)));
 
       executor.shutdown();
       if (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
@@ -42,24 +46,23 @@ public class ClientApplication {
     }
   }
 
-  private static void verarbeite(RechnungClient client, Rechnung rechnung) {
+  private static void verarbeite(
+      RechnungClient client, CamundaProzessClient camunda, Rechnung rechnung) {
     try {
       if (client.speichereRechnungsMetadaten(rechnung).getResponseCode() == 200) {
-        sendeZahlungsauftrag(rechnung);
+        starteZahlungsprozess(camunda, rechnung);
       }
     } catch (Exception e) {
       logger.error("Fehler bei Rechnung {}: {}", rechnung.getRechnungsnummer(), e.getMessage());
     }
   }
 
-  private static void sendeZahlungsauftrag(Rechnung r) throws Exception {
-    try (var producer = new ZahlungsProducer()) {
-      producer.sendeZahlungsauftrag(
-          new Zahlungsauftrag(
-              r.getRechnungsnummer(),
-              r.getGesamtBetrag(),
-              r.getIban(),
-              LocalDateTime.now().plusDays(30)));
-    }
+  private static void starteZahlungsprozess(CamundaProzessClient camunda, Rechnung r) {
+    camunda.starteZahlungsprozess(
+        new Zahlungsauftrag(
+            r.getRechnungsnummer(),
+            r.getGesamtBetrag(),
+            r.getIban(),
+            LocalDateTime.now().plusDays(30)));
   }
 }
