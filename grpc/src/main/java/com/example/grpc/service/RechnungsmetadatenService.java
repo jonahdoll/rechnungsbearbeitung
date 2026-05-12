@@ -49,7 +49,7 @@ public class RechnungsmetadatenService
         connection.commit();
 
         logger.info("Rechnung {} erfolgreich gespeichert. ID: {}", rechnungsnummer, rechnungsId);
-        sendResponse(responseObserver, 200, "Erfolgreich gespeichert. ID: " + rechnungsId);
+        sendResponse(responseObserver, 200, "Erfolgreich gespeichert", rechnungsId.toString());
 
       } catch (ConstraintViolationException e) {
         connection.rollback();
@@ -59,28 +59,30 @@ public class RechnungsmetadatenService
                 .collect(Collectors.joining(", "));
 
         logger.warn("Validierungsfehler: Rechnungsnummer {}: {}", rechnungsnummer, fehlerDetails);
-        sendResponse(responseObserver, 400, "Validierungsfehler: " + fehlerDetails);
+        sendResponse(responseObserver, 400, "Validierungsfehler: " + fehlerDetails, null);
 
       } catch (Exception e) {
         connection.rollback();
         logger.error("Interner Fehler: Rechnungsnummer: {}", rechnungsnummer, e);
-        sendResponse(responseObserver, 500, "Interner Fehler: " + e.getMessage());
+        sendResponse(responseObserver, 500, "Interner Fehler: " + e.getMessage(), null);
       }
 
     } catch (SQLException e) {
       logger.error("Datenbankfehler: Rechnungsnummer {}", rechnungsnummer, e);
-      sendResponse(responseObserver, 500, "Datenbankfehler");
+      sendResponse(responseObserver, 500, "Datenbankfehler", null);
     }
   }
 
   private void sendResponse(
       final StreamObserver<RechnungsMetadata.APIResponse> responseObserver,
       final int responseCode,
-      final String message) {
+      final String message,
+      final String generatedId) {
     final RechnungsMetadata.APIResponse response =
         RechnungsMetadata.APIResponse.newBuilder()
             .setResponseCode(responseCode)
             .setResponsemessage(message)
+            .setGeneratedId(generatedId != null ? generatedId : "")
             .build();
     responseObserver.onNext(response);
     responseObserver.onCompleted();

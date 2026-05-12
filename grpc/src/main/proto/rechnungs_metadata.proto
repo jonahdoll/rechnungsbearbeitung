@@ -34,4 +34,5 @@ message MetadatenSpeichernRequest {
 message APIResponse {
   string responsemessage = 1;
   int32 responseCode = 2;
+  string generatedId = 3;
 }
