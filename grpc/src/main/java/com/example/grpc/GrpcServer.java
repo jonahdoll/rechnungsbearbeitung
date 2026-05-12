@@ -14,7 +14,7 @@ public class GrpcServer {
   private static final Logger logger = LoggerFactory.getLogger(GrpcServer.class);
   private static final int PORT = 50051;
 
-  public static void main(String[] args) throws IOException, InterruptedException {
+  static void main() throws IOException, InterruptedException {
     DatabaseMigration.migrate();
     logger.info("Server wird gestartet...");
 
