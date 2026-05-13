@@ -6,9 +6,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /// Repository für Rechnungspositionen.
 public class RechnungspositionRepository {
@@ -20,13 +17,7 @@ public class RechnungspositionRepository {
       ) VALUES (?, ?, ?, ?, ?)
       """;
 
-  private static final Logger logger = LoggerFactory.getLogger(RechnungspositionRepository.class);
-
-  private final DataSource dataSource;
-
-  public RechnungspositionRepository(final DataSource dataSource) {
-    this.dataSource = dataSource;
-  }
+  public RechnungspositionRepository() {}
 
   /// Speichert Rechnungspositionen.
   ///
@@ -38,14 +29,9 @@ public class RechnungspositionRepository {
       final Connection conn, final List<Rechnungsposition> positionen, final UUID rechnungsId)
       throws SQLException {
     try (PreparedStatement stmt = conn.prepareStatement(INSERT_POSITION_SQL)) {
-      positionen.forEach(
-          position -> {
-            try {
-              insertPosition(stmt, rechnungsId, position);
-            } catch (SQLException e) {
-              throw new RuntimeException(e);
-            }
-          });
+      for (final Rechnungsposition position : positionen) {
+        insertPosition(stmt, rechnungsId, position);
+      }
       stmt.executeBatch();
     }
   }

@@ -16,11 +16,18 @@ public class DatabaseConfig {
     config.setUsername(dotenv.get("ZAHLUNGSSYSTEM_DB_USERNAME"));
     config.setPassword(dotenv.get("ZAHLUNGSSYSTEM_DB_PASSWORD"));
     config.setMaximumPoolSize(10);
+    config.setLeakDetectionThreshold(10_000);
 
     dataSource = new HikariDataSource(config);
   }
 
   public static DataSource getInstance() {
     return dataSource;
+  }
+
+  public static void shutdown() {
+    if (dataSource != null && !dataSource.isClosed()) {
+      dataSource.close();
+    }
   }
 }
