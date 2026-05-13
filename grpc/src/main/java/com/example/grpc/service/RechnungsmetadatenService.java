@@ -27,7 +27,7 @@ public class RechnungsmetadatenService
   public RechnungsmetadatenService() {
     this.dataSource = DatabaseConfig.getInstance();
     this.rechnungsRepo = new RechnungsMetadatenRepository(dataSource);
-    this.positionRepo = new RechnungspositionRepository(dataSource);
+    this.positionRepo = new RechnungspositionRepository();
   }
 
   @Override
@@ -42,7 +42,6 @@ public class RechnungsmetadatenService
 
       try {
         final Rechnungsmetadaten metadaten = Rechnungsmetadaten.fromProto(request);
-
         final UUID rechnungsId = rechnungsRepo.save(connection, metadaten);
         positionRepo.saveAll(connection, metadaten.positionen(), rechnungsId);
 
@@ -52,17 +51,16 @@ public class RechnungsmetadatenService
         sendResponse(responseObserver, 200, "Erfolgreich gespeichert", rechnungsId.toString());
 
       } catch (ConstraintViolationException e) {
-        connection.rollback();
+        safeRollback(connection);
         String fehlerDetails =
             e.getConstraintViolations().stream()
                 .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
                 .collect(Collectors.joining(", "));
-
         logger.warn("Validierungsfehler: Rechnungsnummer {}: {}", rechnungsnummer, fehlerDetails);
         sendResponse(responseObserver, 400, "Validierungsfehler: " + fehlerDetails, null);
 
       } catch (Exception e) {
-        connection.rollback();
+        safeRollback(connection);
         logger.error("Interner Fehler: Rechnungsnummer: {}", rechnungsnummer, e);
         sendResponse(responseObserver, 500, "Interner Fehler: " + e.getMessage(), null);
       }
@@ -70,6 +68,16 @@ public class RechnungsmetadatenService
     } catch (SQLException e) {
       logger.error("Datenbankfehler: Rechnungsnummer {}", rechnungsnummer, e);
       sendResponse(responseObserver, 500, "Datenbankfehler", null);
+    }
+  }
+
+  private static void safeRollback(final Connection connection) {
+    try {
+      if (connection != null) {
+        connection.rollback();
+      }
+    } catch (SQLException e) {
+      logger.error("Rollback fehlgeschlagen", e);
     }
   }
 

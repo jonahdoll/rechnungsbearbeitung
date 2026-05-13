@@ -2,7 +2,6 @@ package com.example.zahlungsystem.repository;
 
 import com.example.zahlungsystem.entity.Zahlungsauftrag;
 import java.sql.*;
-import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,16 +15,16 @@ public class ZahlungsauftragRepository {
         INSERT INTO zahlungsauftraege (
             zahlungs_referenz, betrag, iban, faelligkeitsdatum, status
         ) VALUES (?, ?, ?, ?, ?::zahlungs_status_type)
+        ON CONFLICT (zahlungs_referenz) DO NOTHING
         """;
+
+  private static final String SELECT_STATUS_SQL =
+      "SELECT status FROM zahlungsauftraege WHERE zahlungs_referenz = ?";
 
   private static final String UPDATE_STATUS_SQL =
       "UPDATE zahlungsauftraege SET status = ?::zahlungs_status_type WHERE zahlungs_referenz = ?";
 
-  private final DataSource dataSource;
-
-  public ZahlungsauftragRepository(final DataSource dataSource) {
-    this.dataSource = dataSource;
-  }
+  public ZahlungsauftragRepository() {}
 
   /// Speichert einen neuen Zahlungsauftrag.
   ///
@@ -48,13 +47,27 @@ public class ZahlungsauftragRepository {
 
       int affectedRows = stmt.executeUpdate();
       if (affectedRows == 0) {
-        throw new SQLException("Speichern des Zahlungsauftrags fehlgeschlagen.");
+        logger.info(
+            "Zahlungsauftrag bereits vorhanden (Redelivery): {}", auftrag.zahlungsReferenz());
+      } else {
+        logger.info("Zahlungsauftrag erfolgreich gespeichert: {}", auftrag.zahlungsReferenz());
       }
-
-      logger.info("Zahlungsauftrag erfolgreich gespeichert: {}", auftrag.zahlungsReferenz());
     } catch (SQLException e) {
       logger.error("Fehler beim Insert des Zahlungsauftrags: {}", e.getMessage());
       throw e;
+    }
+  }
+
+  public java.util.Optional<ZahlungsStatusType> findStatus(final Connection conn, final String ref)
+      throws SQLException {
+    try (PreparedStatement stmt = conn.prepareStatement(SELECT_STATUS_SQL)) {
+      stmt.setString(1, ref);
+      try (ResultSet rs = stmt.executeQuery()) {
+        if (rs.next()) {
+          return java.util.Optional.of(ZahlungsStatusType.valueOf(rs.getString("status")));
+        }
+        return java.util.Optional.empty();
+      }
     }
   }
 

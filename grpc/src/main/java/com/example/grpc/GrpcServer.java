@@ -27,7 +27,21 @@ public class GrpcServer {
     server.start();
     logger.info("gRPC-Server gestartet auf Port {}", PORT);
 
-    Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
+    Runtime.getRuntime()
+        .addShutdownHook(
+            Thread.ofVirtual()
+                .unstarted(
+                    () -> {
+                      logger.info("gRPC-Server wird heruntergefahren...");
+                      server.shutdown();
+                      try {
+                        server.awaitTermination();
+                      } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                      }
+                      logger.info("Schließe Datenbankverbindungspool...");
+                      com.example.grpc.config.DatabaseConfig.shutdown();
+                    }));
 
     server.awaitTermination();
   }

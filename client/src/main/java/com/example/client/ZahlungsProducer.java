@@ -28,15 +28,11 @@ public class ZahlungsProducer implements AutoCloseable {
     factory.setUsername(dotenv.get("RABBITMQ_USERNAME"));
     factory.setPassword(dotenv.get("RABBITMQ_PASSWORD"));
 
-    factory.setThreadFactory(Thread.ofVirtual().factory());
-
     this.connection = factory.newConnection();
   }
 
   public void sendeZahlungsauftrag(Zahlungsauftrag auftrag) {
     try (var channel = connection.createChannel()) {
-      channel.queueDeclare(queueName, true, false, false, null);
-
       byte[] body = MAPPER.writeValueAsBytes(auftrag);
       channel.basicPublish("", queueName, null, body);
 
