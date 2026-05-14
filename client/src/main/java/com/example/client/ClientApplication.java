@@ -19,7 +19,7 @@ public class ClientApplication {
     return mapper;
   }
 
-  public static void main(String[] args) {
+  static void main() {
     try (var executor = Executors.newVirtualThreadPerTaskExecutor();
         var client = new RechnungClient()) {
 
@@ -53,7 +53,7 @@ public class ClientApplication {
   }
 
   private static void sendeZahlungsauftrag(Rechnung r) throws Exception {
-    try (var producer = new ZahlungsProducer()) {
+    try (var producer = new com.example.zahlungsystem.ZahlungsProducer()) {
       producer.sendeZahlungsauftrag(
           new Zahlungsauftrag(
               r.getRechnungsnummer(),
