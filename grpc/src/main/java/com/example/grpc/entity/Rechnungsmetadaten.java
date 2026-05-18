@@ -50,8 +50,9 @@ public record Rechnungsmetadaten(
   }
 
   public static Rechnungsmetadaten fromProto(RechnungsMetadata.MetadatenSpeichernRequest req) {
+    final UUID id = req.hasId() ? UUID.fromString(req.getId()) : UUID.randomUUID();
     return new Rechnungsmetadaten(
-        UUID.randomUUID(),
+        id,
         req.getRechnungsnummer(),
         convertTimestamp(req.getRechnungsdatum()),
         req.hasFaelligkeitsdatum() ? convertTimestamp(req.getFaelligkeitsdatum()) : null,
