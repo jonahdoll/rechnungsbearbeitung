@@ -10,10 +10,11 @@ public record AppConfig(
     String rabbitmqQueue,
     String grpcHost,
     int grpcPort,
-    String camundaRESTApi,
+    String camundaClientMode,
+    String camundaCloudClusterId,
+    String camundaClientCloudRegion,
     String camundaClientId,
-    String camundaClientSecret,
-    String camundaAudience) {
+    String camundaClientSecret) {
   public static AppConfig load() {
     Dotenv dotenv = Dotenv.load();
     return new AppConfig(
@@ -24,9 +25,10 @@ public record AppConfig(
         dotenv.get("RABBITMQ_QUEUE_NAME"),
         dotenv.get("GRPC_HOST"),
         Integer.parseInt(dotenv.get("GRPC_PORT")),
-        dotenv.get("CAMUNDA_REST_API"),
-        dotenv.get("CAMUNDA_CLIENT_ID"),
-        dotenv.get("CAMUNDA_CLIENT_SECRET"),
-        dotenv.get("CAMUNDA_AUDIENCE"));
+        dotenv.get("CAMUNDA_CLIENT_MODE"),
+        dotenv.get("CAMUNDA_CLIENT_CLOUD_CLUSTER_ID"),
+        dotenv.get("CAMUNDA_CLIENT_CLOUD_REGION"),
+        dotenv.get("CAMUNDA_CLIENT_AUTH_CLIENT_ID"),
+        dotenv.get("CAMUNDA_CLIENT_AUTH_CLIENT_SECRET"));
   }
 }

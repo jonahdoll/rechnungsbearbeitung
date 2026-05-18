@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 public class WorkerOrchestrator {
   private static final Logger logger = LoggerFactory.getLogger(WorkerOrchestrator.class);
 
-  static void main() {
+  public static void main(String[] args) {
     AppConfig config = AppConfig.load();
 
     try (CamundaClient camundaClient = createCamundaClient(config)) {
@@ -50,14 +50,22 @@ public class WorkerOrchestrator {
   }
 
   private static CamundaClient createCamundaClient(final AppConfig config) {
+    String restUrl =
+        "https://"
+            + config.camundaClientCloudRegion()
+            + ".zeebe.camunda.io/"
+            + config.camundaCloudClusterId();
+
+    var credentialsProvider =
+        new OAuthCredentialsProviderBuilder()
+            .clientId(config.camundaClientId())
+            .clientSecret(config.camundaClientSecret())
+            .audience("zeebe.camunda.io")
+            .build();
+
     return CamundaClient.newClientBuilder()
-        .restAddress(URI.create(config.camundaRESTApi()))
-        .credentialsProvider(
-            new OAuthCredentialsProviderBuilder()
-                .clientId(config.camundaClientId())
-                .clientSecret(config.camundaClientSecret())
-                .audience(config.camundaAudience())
-                .build())
+        .restAddress(URI.create(restUrl))
+        .credentialsProvider(credentialsProvider)
         .build();
   }
 }
