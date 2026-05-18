@@ -15,6 +15,7 @@
         <module>grpc</module>
         <module>zahlungssystem</module>
         <module>client</module>
+        <module>camunda-workers</module>
     </modules>
 
     <properties>
