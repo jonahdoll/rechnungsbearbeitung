@@ -39,16 +39,6 @@ public class WorkerOrchestrator {
     }
   }
 
-  private static Connection createRabbitConnection(final AppConfig config) throws Exception {
-    ConnectionFactory factory = new ConnectionFactory();
-    factory.setHost(config.rabbitmqHost());
-    factory.setPort(config.rabbitmqPort());
-    factory.setUsername(config.rabbitmqUser());
-    factory.setPassword(config.rabbitmqPassword());
-    factory.setAutomaticRecoveryEnabled(true);
-    return factory.newConnection();
-  }
-
   private static CamundaClient createCamundaClient(final AppConfig config) {
     String restUrl =
         "https://"
