@@ -1,8 +1,6 @@
 package com.example.camundaworkers;
 
 import com.example.zahlungsystem.ZahlungsProducer;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 import io.camunda.client.CamundaClient;
 import io.camunda.client.impl.oauth.OAuthCredentialsProviderBuilder;
 import java.net.URI;
@@ -16,26 +14,31 @@ public class WorkerOrchestrator {
   public static void main(String[] args) {
     AppConfig config = AppConfig.load();
 
-    try (CamundaClient camundaClient = createCamundaClient(config)) {
-
-      ZahlungsProducer paymentProducer = new ZahlungsProducer();
-
-      logger.info("Worker starten...");
-
-      try (var ignored =
-          camundaClient
-              .newWorker()
-              .jobType("zahlungsservice-g1")
-              .handler(new ZahlungsserviceHandler(paymentProducer))
-              .open()) {
-
-        logger.info("Zahlungsservice-Worker aktiv. Warte auf Jobs...");
-
-        new CountDownLatch(1).await();
-      }
-
+    try {
+      runWorkers(config);
     } catch (Exception e) {
       logger.error("Kritischer Systemfehler: ", e);
+    }
+  }
+
+  private static void runWorkers(AppConfig config) throws Exception {
+    try (ZahlungsProducer paymentProducer = new ZahlungsProducer();
+        GrpcClient grpcClient = new GrpcClient();
+        CamundaClient camundaClient = createCamundaClient(config);
+        var zahlungsserviceWorker =
+            camundaClient
+                .newWorker()
+                .jobType("zahlungsservice-g1")
+                .handler(new ZahlungsserviceHandler(paymentProducer))
+                .open();
+        var metadatenWorker =
+            camundaClient
+                .newWorker()
+                .jobType("metadaten-speichern-g1")
+                .handler(new MetadatenSpeichernHandler(grpcClient))
+                .open()) {
+      logger.info("Zahlungsservice-Worker und Metadaten-Worker aktiv. Warte auf Jobs...");
+      new CountDownLatch(1).await();
     }
   }
 
