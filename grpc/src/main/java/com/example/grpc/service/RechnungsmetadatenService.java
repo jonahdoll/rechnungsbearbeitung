@@ -39,35 +39,52 @@ public class RechnungsmetadatenService
 
     try (Connection connection = dataSource.getConnection()) {
       connection.setAutoCommit(false);
+      final UUID rechnungsId = persistiere(connection, request);
+      connection.commit();
 
-      try {
-        final Rechnungsmetadaten metadaten = Rechnungsmetadaten.fromProto(request);
-        final UUID rechnungsId = rechnungsRepo.save(connection, metadaten);
-        positionRepo.saveAll(connection, metadaten.positionen(), rechnungsId);
+      logger.info("Rechnung {} erfolgreich gespeichert. ID: {}", rechnungsnummer, rechnungsId);
+      sendResponse(responseObserver, 200, "Erfolgreich gespeichert", rechnungsId.toString());
 
-        connection.commit();
-
-        logger.info("Rechnung {} erfolgreich gespeichert. ID: {}", rechnungsnummer, rechnungsId);
-        sendResponse(responseObserver, 200, "Erfolgreich gespeichert", rechnungsId.toString());
-
-      } catch (ConstraintViolationException e) {
-        safeRollback(connection);
-        String fehlerDetails =
-            e.getConstraintViolations().stream()
-                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
-                .collect(Collectors.joining(", "));
-        logger.warn("Validierungsfehler: Rechnungsnummer {}: {}", rechnungsnummer, fehlerDetails);
-        sendResponse(responseObserver, 400, "Validierungsfehler: " + fehlerDetails, null);
-
-      } catch (Exception e) {
-        safeRollback(connection);
-        logger.error("Interner Fehler: Rechnungsnummer: {}", rechnungsnummer, e);
-        sendResponse(responseObserver, 500, "Interner Fehler: " + e.getMessage(), null);
-      }
+    } catch (ConstraintViolationException e) {
+      String fehlerDetails =
+          e.getConstraintViolations().stream()
+              .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+              .collect(Collectors.joining(", "));
+      logger.warn("Validierungsfehler: Rechnungsnummer {}: {}", rechnungsnummer, fehlerDetails);
+      sendResponse(responseObserver, 400, "Validierungsfehler: " + fehlerDetails, null);
 
     } catch (SQLException e) {
-      logger.error("Datenbankfehler: Rechnungsnummer {}", rechnungsnummer, e);
-      sendResponse(responseObserver, 500, "Datenbankfehler", null);
+      handleSqlException(e, rechnungsnummer, responseObserver);
+
+    } catch (Exception e) {
+      logger.error("Interner Fehler: Rechnungsnummer: {}", rechnungsnummer, e);
+      sendResponse(responseObserver, 500, "Interner Fehler: " + e.getMessage(), null);
+    }
+  }
+
+  private UUID persistiere(final Connection connection,
+      final RechnungsMetadata.MetadatenSpeichernRequest request) throws SQLException {
+    try {
+      final boolean isUpdate = request.hasId() && !request.getId().isBlank();
+      final Rechnungsmetadaten metadaten = Rechnungsmetadaten.fromProto(request);
+      final UUID rechnungsId = rechnungsRepo.save(connection, metadaten, isUpdate);
+      positionRepo.saveAll(connection, metadaten.positionen(), rechnungsId);
+      return rechnungsId;
+    } catch (SQLException | RuntimeException e) {
+      safeRollback(connection);
+      throw e;
+    }
+  }
+
+  private void handleSqlException(final SQLException e, final String rechnungsnummer,
+      final StreamObserver<RechnungsMetadata.APIResponse> responseObserver) {
+    if ("23505".equals(e.getSQLState())) {
+      logger.warn("Duplikat: Rechnungsnummer {} existiert bereits.", rechnungsnummer);
+      sendResponse(responseObserver, 409,
+          "Rechnungsnummer " + rechnungsnummer + " existiert bereits.", null);
+    } else {
+      logger.error("Datenbankfehler: Rechnungsnummer: {}", rechnungsnummer, e);
+      sendResponse(responseObserver, 500, "Datenbankfehler: " + e.getMessage(), null);
     }
   }
 
