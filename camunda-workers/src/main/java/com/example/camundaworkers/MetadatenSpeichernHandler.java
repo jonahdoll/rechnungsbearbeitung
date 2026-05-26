@@ -107,7 +107,7 @@ public class MetadatenSpeichernHandler implements JobHandler {
 
   private static Timestamp toTimestamp(String dateTimeStr) {
     LocalDateTime ldt = LocalDateTime.parse(dateTimeStr, FORMATTER);
-    Instant instant = ldt.atZone(ZoneId.systemDefault()).toInstant();
+    Instant instant = ldt.atZone(ZoneId.of("UTC")).toInstant();
     return Timestamp.newBuilder()
         .setSeconds(instant.getEpochSecond())
         .setNanos(instant.getNano())
