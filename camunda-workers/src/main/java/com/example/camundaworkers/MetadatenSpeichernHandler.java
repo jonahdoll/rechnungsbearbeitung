@@ -81,13 +81,29 @@ public class MetadatenSpeichernHandler implements JobHandler {
       }
 
     } catch (Exception e) {
-      logger.error("Fehler beim Speichern der Metadaten", e);
-      client
-          .newFailCommand(job.getKey())
-          .retries(0)
-          .errorMessage("Metadatenfehler: " + e.getMessage())
-          .send()
-          .join();
+      int remainingRetries = job.getRetries() - 1;
+      logger.error(
+          "Fehler beim Speichern der Metadaten. Verbleibende Retries: {}", remainingRetries, e);
+
+      if (remainingRetries <= 0) {
+        // Alle Retries aufgebraucht. BPMN-Error für manuelle Bearbeitung
+        logger.warn("Alle Retries aufgebraucht. Eskaliere zur manuellen Bearbeitung.");
+        client
+            .newThrowErrorCommand(job.getKey())
+            .errorCode("GRPC_NICHT_ERREICHBAR")
+            .errorMessage("gRPC-Service nicht erreichbar: " + e.getMessage())
+            .send()
+            .join();
+      } else {
+        // Camunda übernimmt das Retry-Scheduling
+        client
+            .newFailCommand(job.getKey())
+            .retries(remainingRetries)
+            .retryBackoff(java.time.Duration.ofSeconds(3))
+            .errorMessage("gRPC-Verbindungsfehler: " + e.getMessage())
+            .send()
+            .join();
+      }
     }
   }
 
