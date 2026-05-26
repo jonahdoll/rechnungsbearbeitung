@@ -15,16 +15,14 @@ public class RechnungsMetadatenRepository {
           id, rechnungsnummer, rechnungsdatum, faelligkeitsdatum,
           rechnungsausteller, rechnungsempfaenger, iban, bic
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT (id) DO UPDATE SET
-          rechnungsnummer = EXCLUDED.rechnungsnummer,
-          rechnungsdatum = EXCLUDED.rechnungsdatum,
-          faelligkeitsdatum = EXCLUDED.faelligkeitsdatum,
-          rechnungsausteller = EXCLUDED.rechnungsausteller,
-          rechnungsempfaenger = EXCLUDED.rechnungsempfaenger,
-          iban = EXCLUDED.iban,
-          bic = EXCLUDED.bic
       RETURNING id
       """;
+
+  private static final String DELETE_RECHNUNG_BY_ID_SQL =
+      "DELETE FROM rechnungsmetadaten WHERE id = ?";
+
+  private static final String DELETE_RECHNUNG_BY_NUMMER_SQL =
+      "DELETE FROM rechnungsmetadaten WHERE rechnungsnummer = ?";
 
   private static final Logger logger = LoggerFactory.getLogger(RechnungsMetadatenRepository.class);
 
@@ -34,15 +32,30 @@ public class RechnungsMetadatenRepository {
     this.dataSource = dataSource;
   }
 
-  /// Speichert eine Rechnung.
+  /// Speichert eine Rechnung. Wenn eine ID übergeben wird, wird die bestehende Rechnung
+  /// (inkl. Positionen via CASCADE) zuerst per ID gelöscht und dann neu eingefügt.
+  /// Wenn keine ID übergeben wird, wird zusätzlich anhand der Rechnungsnummer geprüft,
+  /// ob bereits ein Datensatz existiert. Falls ja, wird dieser auch gelöscht
   ///
   /// @param conn Bestehende Datenbankverbindung.
   /// @param rechnung Rechnungsmetadaten, die gespeichert werden sollen.
-  /// @return Die generierte Rechnungs-ID.
+  /// @param isUpdate Gibt an, ob ein bestehendes Objekt anhand der ID ersetzt werden soll.
+  /// @return Die generierte/beibehaltene Rechnungs-ID.
   /// @throws SQLException wenn ein Datenbankfehler auftritt.
-  public UUID save(final Connection conn, final Rechnungsmetadaten rechnung) throws SQLException {
-    logger.debug("rechnungsnummer={}", rechnung.rechnungsnummer());
+  public UUID save(final Connection conn, final Rechnungsmetadaten rechnung, final boolean isUpdate)
+      throws SQLException {
+    logger.debug("rechnungsnummer={}, isUpdate={}", rechnung.rechnungsnummer(), isUpdate);
+    if (isUpdate) {
+      deleteRechnungById(conn, rechnung.id());
+    }
     return insertRechnung(conn, rechnung);
+  }
+
+  private void deleteRechnungById(final Connection conn, final UUID id) throws SQLException {
+    try (PreparedStatement stmt = conn.prepareStatement(DELETE_RECHNUNG_BY_ID_SQL)) {
+      stmt.setObject(1, id);
+      stmt.executeUpdate();
+    }
   }
 
   private UUID insertRechnung(final Connection conn, final Rechnungsmetadaten rechnung)
