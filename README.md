@@ -1,32 +1,25 @@
 # Rechnungsbearbeitung
 
-Ein verteiltes System zur automatisierten Rechnungsbearbeitung und Zahlungsverarbeitung, das auf Java, gRPC, RabbitMQ und PostgreSQL basiert.
+Ein unternehmensweites verteiltes System zur automatisierten Rechnungsbearbeitung, Zahlungsverarbeitung und Workflow-Orchestrierung basierend auf Java, gRPC, RabbitMQ, PostgreSQL und Camunda BPMN.
 
 ## Projektübersicht
 
-Das System besteht aus drei Hauptkomponenten:
+Das System ist eine Kombination aus mehreren Microservices und einer zentralen Workflow-Engine zur Verwaltung von Geschäftsprozessen rund um die Rechnungsabwicklung. Es bietet eine vollständige Lösung für die Erfassung, Validierung, Verarbeitung und Zahlung von Rechnungen.
 
-1. **gRPC-Server**: Speichert Rechnungsmetadaten in PostgreSQL
-2. **Zahlungssystem**: Verarbeitet Zahlungsaufträge über RabbitMQ und speichert sie in einer separaten PostgreSQL-Datenbank
-3. **Client**: Liest Rechnungen aus XML-Dateien, sendet sie an den gRPC-Server und erzeugt Zahlungsaufträge
+Das System besteht aus 4 Code Projekten, der Camunda Workflow Engine und einem ERP-System.
+
+1. **gRPC-Server**: Validiert und speichert Rechnungsmetadaten mit PostgreSQL als Backend
+2. **Zahlungssystem**: Asynchrone Verarbeitung von Zahlungsaufträgen über RabbitMQ Message Queue
+3. **Client**: XML-basiertes Rechnungsimport-Tool mit gRPC-Integration
+4. **Camunda-Workers**: Eigenständiger Service, der die Prozess-Engine kontinuierlich nach anstehenden automatisierten Aufgaben abfragt und dann per gRPC die Metadaten von Rechnungen speichert oder Zahlungen auf die rabbitmq legt. Er liefert das Ergebnis anschließend an die Engine zürück (auch wenn Service nicht verfügbar ist)
+5. **Camunda Workflow Engine**: BPMN-basierte Orchestrierung aller Geschäftsprozesse, inklusive User Tasks, E-Mail-Integration, EDI-Integration und Portal für Sachbearbeiter, Manager und Finance-Personal
+6. **ERP-System**: Wird von den Arbeitern zum Eintragen der Rechnungsdaten genutzt
 
 ## Systemarchitektur
 
-```
-Client
-↓ (gRPC)
-gRPC-Server (Port 50051)
-↓ (Speichert in PostgreSQL)
-Database (gRPC) auf Port 5432
-
-Client
-↓ (RabbitMQ)
-RabbitMQ Message Queue (Port 5672)
-↓ (Konsumiert)
-Zahlungssystem
-↓ (Speichert in PostgreSQL)
-Database (Zahlungssystem) auf Port 5433
-```
+Das System folgt einer Microservices-Architektur mit ereignisgetriebener Verarbeitung:
+![Systemarchitektur](DVG-Orchestrierung.drawio.svg)
+*Tipp: Klicke auf das Bild, um es interaktiv in draw.io zu öffnen.*
 
 ## Voraussetzungen
 
@@ -54,16 +47,22 @@ Die `.env`-Datei enthält bereits die richtigen Standard-Konfigurationen:
 - PostgreSQL für gRPC auf Port 5432
 - PostgreSQL für Zahlungssystem auf Port 5433
 - RabbitMQ auf Port 5672
+- Camunda auf Port 8080
 
 ### 3. Docker-Services starten
 
-Starten Sie alle notwendigen Services (PostgreSQL-Datenbanken und RabbitMQ):
+Starten Sie alle notwendigen Services (PostgreSQL-Datenbanken, RabbitMQ und Camunda):
 
 ```bash
 docker-compose -f extras/compose/backend/docker-compose.yml up -d
 ```
 
-**Warten Sie ca. 10-15 Sekunden**, bis die Services vollständig gestartet sind.
+**Warten Sie ca. 30-45 Sekunden**, bis alle Services vollständig gestartet sind.
+
+Überprüfen Sie den Status mit:
+```bash
+docker-compose -f extras/compose/backend/docker-compose.yml ps
+```
 
 ### 4. Projekt bauen
 
@@ -71,11 +70,11 @@ docker-compose -f extras/compose/backend/docker-compose.yml up -d
 mvn clean install
 ```
 
-Dies kompiliert alle drei Module (grpc, zahlungssystem, client).
+Dies kompiliert alle vier Module (grpc, zahlungssystem, client, camunda-workers).
 
-### 5. Alle Services starten
+### 5. Services starten
 
-Öffnen Sie **vier separate Terminal-Fenster** und starten Sie die Services nacheinander:
+Öffnen Sie **vier bis fünf separate Terminal-Fenster** und starten Sie die Services nacheinander:
 
 #### Terminal 1: gRPC-Server starten
 
@@ -107,58 +106,61 @@ mvn -pl client exec:java -Dexec.mainClass="com.example.client.ClientApplication"
 
 Der Client liest Rechnungen aus `client/src/main/resources/rechnungen.xml`, sendet diese an den gRPC-Server und erzeugt Zahlungsaufträge.
 
+#### Terminal 4 (optional): Camunda Workers starten
+
+```bash
+mvn -pl camunda-workers exec:java -Dexec.mainClass="com.example.camunda.CamundaWorker"
+```
+
+#### Terminal 5: Camunda UI öffnen
+
+Öffnen Sie in Ihrem Browser:
+```
+http://localhost:8080/camunda/
+```
+
+Standardanmeldedaten:
+- **Benutzer**: demo
+- **Passwort**: demo
+
 ## Verarbeitung im Detail
 
-### Ablauf einer Rechnungsverarbeitung:
+### Workflow einer Rechnungsverarbeitung:
 
-1. **Client liest XML**: Rechnungen werden aus `rechnungen.xml` gelesen
-2. **gRPC-Anfrage**: Rechnungsmetadaten werden an den gRPC-Server gesendet
-3. **Speicherung**: Der gRPC-Server speichert die Daten in seiner PostgreSQL-Datenbank
-4. **RabbitMQ**: Bei erfolgreicher Speicherung wird ein Zahlungsauftrag in die RabbitMQ-Queue geschrieben
-5. **Consumer**: Der Zahlungssystem-Consumer verarbeitet die Zahlungsaufträge
-6. **Speicherung & Verarbeitung**: Zahlungsaufträge werden mit Status verfolgt (AUSSTEHEND → IN_BEARBEITUNG → ABGESCHLOSSEN/FEHLGESCHLAGEN)
+1. **Client-Input**: Rechnungen werden aus XML-Dateien durch den Client Importer gelesen
+2. **gRPC-Validierung**: Rechnungsmetadaten werden an den gRPC-Server zur Validierung gesendet
+3. **Speicherung in gRPC-DB**: Der gRPC-Server speichert validierte Daten in seiner PostgreSQL-Datenbank
+4. **Workflow-Auslöser**: Nach erfolgreicher Speicherung wird ein Zahlungsauftrag in RabbitMQ Queue publiziert
+5. **Workflow-Orchestrierung**: Camunda Workflow Engine empfängt das Event und initiiert den entsprechenden BPMN-Prozess
+6. **Asynchrone Verarbeitung**: Der Zahlungssystem-Consumer verarbeitet die Zahlungsaufträge aus der Queue
+7. **Status-Tracking**: Zahlungsaufträge werden mit Status aktualisiert (AUSSTEHEND → IN_BEARBEITUNG → ABGESCHLOSSEN/FEHLGESCHLAGEN)
+8. **Benutzer-Interaktion**: Sachbearbeiter, Manager und Finance-Personal interagieren über die Camunda UI / Portal
+9. **ERP-Integration**: Abgeschlossene Transaktionen werden ins ERP-System synchronisiert
 
-## Datenbanken
+## Services und Ports
 
-### gRPC-Datenbank
+### gRPC-Server
+- **Port**: 50051
+- **Funktion**: Validierung und Speicherung von Rechnungsmetadaten
+- **Protokoll**: gRPC
+- **Datenbank**: PostgreSQL auf Port 5432
 
-- **Host**: localhost
-- **Port**: 5432
-- **Datenbank**: grpc
-- **Benutzer**: kunde
-- **Passwort**: p
+### Zahlungssystem
+- **Queue**: zahlungsauftraege (RabbitMQ)
+- **Funktion**: Verarbeitung von Zahlungsaufträgen
+- **Datenbank**: PostgreSQL auf Port 5433
 
-Verbindung testen:
-```bash
-psql -h localhost -U kunde -d grpc
-```
+### Camunda Workflow Engine
+- **Port**: 8080 (Standard)
+- **UI-Port**: 8080/camunda
+- **Funktion**: BPMN-basierte Prozessorchestrierung
+- **Features**: User Task Management, Email Integration, EDI Integration, Portal
 
-### Zahlungssystem-Datenbank
-
-- **Host**: localhost
-- **Port**: 5433
-- **Datenbank**: zahlungssystem
-- **Benutzer**: kunde
-- **Passwort**: p
-
-Verbindung testen:
-```bash
-psql -h localhost -U kunde -d zahlungssystem
-```
-
-## RabbitMQ
-
-- **Host**: localhost
-- **Port**: 5672 (AMQP)
-- **Port**: 15672 (Management-UI)
-- **Benutzer**: kunde
-- **Passwort**: p
+### RabbitMQ Message Broker
+- **AMQP-Port**: 5672
+- **Management-UI**: 15672
 - **Queue**: zahlungsauftraege
-
-Management-UI öffnen:
-```
-http://localhost:15672
-```
+- **Persistierung**: Aktiviert
 
 ## Aufräumen
 
