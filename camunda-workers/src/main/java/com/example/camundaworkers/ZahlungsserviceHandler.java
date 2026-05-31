@@ -9,15 +9,15 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ZahlungsserviceHandler implements JobHandler {
-  private final ZahlungsProducer producer;
+  private static final Logger logger = LoggerFactory.getLogger(ZahlungsserviceHandler.class);
   public static final DateTimeFormatter FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
-  public ZahlungsserviceHandler(ZahlungsProducer producer) {
-    this.producer = producer;
-  }
+  public ZahlungsserviceHandler() {}
 
   @Override
   public void handle(JobClient client, ActivatedJob job) {
@@ -31,17 +31,33 @@ public class ZahlungsserviceHandler implements JobHandler {
               (String) vars.get("iban"),
               LocalDateTime.parse((String) vars.get("faelligkeitsdatum"), FORMATTER));
 
-      producer.sendeZahlungsauftrag(auftrag);
+      try (ZahlungsProducer producer = new ZahlungsProducer()) {
+        producer.sendeZahlungsauftrag(auftrag);
+      }
 
       client.newCompleteCommand(job.getKey()).send().join();
 
     } catch (Exception e) {
-      client
-          .newFailCommand(job.getKey())
-          .retries(0)
-          .errorMessage("Zahlungsfehler: " + e.getMessage())
-          .send()
-          .join();
+      int remainingRetries = job.getRetries() - 1;
+      logger.error("Fehler beim Senden an RabbitMQ. Verbleibende Retries: {}", remainingRetries, e);
+
+      if (remainingRetries <= 0) {
+        logger.warn("RabbitMQ dauerhaft nicht erreichbar. Melde SERVICE_UNAVAILABLE an Camunda.");
+        client
+            .newThrowErrorCommand(job.getKey())
+            .errorCode("ZAHLUNGSSERVICE_SERVICE_UNAVAILABLE")
+            .errorMessage("RabbitMQ-Broker ist nicht erreichbar: " + e.getMessage())
+            .send()
+            .join();
+      } else {
+        client
+            .newFailCommand(job.getKey())
+            .retries(remainingRetries)
+            .retryBackoff(java.time.Duration.ofSeconds(5))
+            .errorMessage("RabbitMQ temporär nicht erreichbar: " + e.getMessage())
+            .send()
+            .join();
+      }
     }
   }
 }
