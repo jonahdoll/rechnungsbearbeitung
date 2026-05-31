@@ -15,6 +15,7 @@ public record AppConfig(
     String camundaClientCloudRegion,
     String camundaClientId,
     String camundaClientSecret) {
+
   public static AppConfig load() {
     Dotenv dotenv = Dotenv.load();
     return new AppConfig(

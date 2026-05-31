@@ -21,6 +21,7 @@ message Rechnungsposition {
 }
 
 message MetadatenSpeichernRequest {
+  optional string id = 9;
   string rechnungsnummer = 1;
   google.protobuf.Timestamp rechnungsdatum = 2;
   google.protobuf.Timestamp faelligkeitsdatum = 3;
