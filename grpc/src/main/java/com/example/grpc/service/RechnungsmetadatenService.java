@@ -62,8 +62,9 @@ public class RechnungsmetadatenService
     }
   }
 
-  private UUID persistiere(final Connection connection,
-      final RechnungsMetadata.MetadatenSpeichernRequest request) throws SQLException {
+  private UUID persistiere(
+      final Connection connection, final RechnungsMetadata.MetadatenSpeichernRequest request)
+      throws SQLException {
     try {
       final boolean isUpdate = request.hasId() && !request.getId().isBlank();
       final Rechnungsmetadaten metadaten = Rechnungsmetadaten.fromProto(request);
@@ -76,12 +77,17 @@ public class RechnungsmetadatenService
     }
   }
 
-  private void handleSqlException(final SQLException e, final String rechnungsnummer,
+  private void handleSqlException(
+      final SQLException e,
+      final String rechnungsnummer,
       final StreamObserver<RechnungsMetadata.APIResponse> responseObserver) {
     if ("23505".equals(e.getSQLState())) {
       logger.warn("Duplikat: Rechnungsnummer {} existiert bereits.", rechnungsnummer);
-      sendResponse(responseObserver, 409,
-          "Rechnungsnummer " + rechnungsnummer + " existiert bereits.", null);
+      sendResponse(
+          responseObserver,
+          409,
+          "Rechnungsnummer " + rechnungsnummer + " existiert bereits.",
+          null);
     } else {
       logger.error("Datenbankfehler: Rechnungsnummer: {}", rechnungsnummer, e);
       sendResponse(responseObserver, 500, "Datenbankfehler: " + e.getMessage(), null);
