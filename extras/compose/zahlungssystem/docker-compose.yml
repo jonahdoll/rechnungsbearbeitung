@@ -13,6 +13,12 @@ services:
     volumes:
       - ./db-data/:/var/lib/postgresql
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${ZAHLUNGSSYSTEM_DB_USERNAME} -d ${ZAHLUNGSSYSTEM_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   rabbitmq:
     image: rabbitmq:3-management-alpine
     ports:
@@ -23,3 +29,8 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     volumes:
       - ./rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 5s
+      timeout: 5s
+      retries: 5

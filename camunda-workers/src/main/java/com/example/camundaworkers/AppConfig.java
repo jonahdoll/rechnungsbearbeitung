@@ -17,7 +17,7 @@ public record AppConfig(
     String camundaClientSecret) {
 
   public static AppConfig load() {
-    Dotenv dotenv = Dotenv.load();
+    Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
     return new AppConfig(
         dotenv.get("RABBITMQ_HOST"),
         Integer.parseInt(dotenv.get("RABBITMQ_PORT")),
