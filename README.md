@@ -1,39 +1,75 @@
 # Rechnungsbearbeitung
 
-Ein verteiltes System zur automatisierten Rechnungsbearbeitung und Zahlungsverarbeitung, das auf Java, gRPC, RabbitMQ und PostgreSQL basiert.
+> Verteiltes System zur automatisierten Rechnungsbearbeitung, Zahlungsverarbeitung und Workflow-Orchestrierung mit Java 25, gRPC, RabbitMQ, PostgreSQL und Camunda 8.
+
+## Inhaltsverzeichnis
+
+- [Projektübersicht](#projektübersicht)
+- [Systemarchitektur](#systemarchitektur)
+- [Tech-Stack](#tech-stack)
+- [Voraussetzungen](#voraussetzungen)
+- [Schnellstart](#schnellstart)
+- [Module](#module)
+- [Konfiguration](#konfiguration)
+- [Entwicklung](#entwicklung)
+- [Debugging](#debugging)
+- [Lizenz](#lizenz)
 
 ## Projektübersicht
 
-Das System besteht aus drei Hauptkomponenten:
+Das System besteht aus vier Microservices und einer externen Workflow-Engine:
 
-1. **gRPC-Server**: Speichert Rechnungsmetadaten in PostgreSQL
-2. **Zahlungssystem**: Verarbeitet Zahlungsaufträge über RabbitMQ und speichert sie in einer separaten PostgreSQL-Datenbank
-3. **Client**: Liest Rechnungen aus XML-Dateien, sendet sie an den gRPC-Server und erzeugt Zahlungsaufträge
+| Modul | Beschreibung |
+|-------|-------------|
+| **grpc** | Validiert und speichert Rechnungsmetadaten (PostgreSQL + Flyway) |
+| **zahlungssystem** | Asynchrone Zahlungsverarbeitung über RabbitMQ |
+| **client** | XML-basierter Rechnungsimport mit gRPC-Integration |
+| **camunda-workers** | Job-Worker für Camunda 8 SaaS – speichert Metadaten & erstellt Zahlungsaufträge |
+
+Zusätzlich:
+- **Camunda 8 (SaaS)** – BPMN-basierte Orchestrierung inkl. User Tasks, E-Mail- und EDI-Integration
+- **ERP-System** – Externes System zum Eintragen der Rechnungsdaten
 
 ## Systemarchitektur
 
-```
-Client
-↓ (gRPC)
-gRPC-Server (Port 50051)
-↓ (Speichert in PostgreSQL)
-Database (gRPC) auf Port 5432
+![Systemarchitektur](DVG-Orchestrierung.drawio.svg)
 
-Client
-↓ (RabbitMQ)
-RabbitMQ Message Queue (Port 5672)
-↓ (Konsumiert)
-Zahlungssystem
-↓ (Speichert in PostgreSQL)
-Database (Zahlungssystem) auf Port 5433
 ```
+Client ─── gRPC ───► gRPC-Server ───► PostgreSQL (Port 5432)
+                          │
+                          ▼
+                      RabbitMQ (Port 5672)
+                          │
+                          ▼
+                   ZahlungsConsumer ───► PostgreSQL (Port 5433)
+
+Camunda 8 Cloud ◄───► Camunda Workers ───► gRPC-Server / RabbitMQ
+```
+
+## Tech-Stack
+
+| Technologie | Version | Zweck |
+|-------------|---------|-------|
+| Java | 25 | Laufzeit |
+| Maven | 3.8+ | Build-System |
+| gRPC | 1.75.0 | Service-Kommunikation |
+| Protocol Buffers | 4.30.2 | Serialisierung |
+| RabbitMQ | 3.x | Message Broker |
+| PostgreSQL | latest | Datenbanken |
+| Flyway | 11.8.0 | DB-Migrationen |
+| HikariCP | 5.1.0 / 7.0.2 | Connection Pooling |
+| Camunda 8 SDK | 8.8.24 | Workflow-Engine Client |
+| Jackson | 2.17.0 | JSON-Serialisierung |
+| Hibernate Validator | 8.0.1 | Bean Validation |
+| Spotless + Google Java Format | 1.27.0 | Code-Formatierung |
+| Jib | 3.4.0 | Container-Images |
 
 ## Voraussetzungen
 
-- **Java 25+** (oder Ihre unterstützte JDK-Version)
+- **Java 25+** (z. B. Eclipse Temurin)
 - **Maven 3.8+**
 - **Docker & Docker Compose**
-- **Git**
+- **Camunda 8 SaaS Account** (Cluster-ID, Client-ID & Secret erforderlich)
 
 ## Schnellstart
 
@@ -50,319 +86,242 @@ cd rechnungsbearbeitung
 cp example.env .env
 ```
 
-Die `.env`-Datei enthält bereits die richtigen Standard-Konfigurationen:
-- PostgreSQL für gRPC auf Port 5432
-- PostgreSQL für Zahlungssystem auf Port 5433
-- RabbitMQ auf Port 5672
+Passe in der `.env` die Camunda-Cloud-Zugangsdaten an:
 
-### 3. Docker-Services starten
-
-Starten Sie alle notwendigen Services (PostgreSQL-Datenbanken und RabbitMQ):
-
-```bash
-docker-compose -f extras/compose/backend/docker-compose.yml up -d
+```env
+CAMUNDA_CLIENT_CLOUD_CLUSTER_ID=<deine-cluster-id>
+CAMUNDA_CLIENT_AUTH_CLIENT_ID=<deine-client-id>
+CAMUNDA_CLIENT_AUTH_CLIENT_SECRET=<dein-secret>
 ```
 
-**Warten Sie ca. 10-15 Sekunden**, bis die Services vollständig gestartet sind.
-
-### 4. Projekt bauen
+### 3. Projekt bauen & Container-Images erstellen
 
 ```bash
 mvn clean install
+mvn -pl grpc,zahlungssystem,camunda-workers jib:dockerBuild
 ```
 
-Dies kompiliert alle drei Module (grpc, zahlungssystem, client).
-
-### 5. Alle Services starten
-
-Öffnen Sie **vier separate Terminal-Fenster** und starten Sie die Services nacheinander:
-
-#### Terminal 1: gRPC-Server starten
+### 4. Alle Services starten
 
 ```bash
-mvn -pl grpc exec:java -Dexec.mainClass="com.example.grpc.GrpcServer"
+docker compose up
 ```
 
-Sie sollten eine Meldung sehen:
-```
-gRPC-Server gestartet auf Port 50051
-```
+Startet alles in einem Schritt mit Live-Log-Ausgabe:
+- PostgreSQL für gRPC (Port 5432)
+- PostgreSQL für Zahlungssystem (Port 5433)
+- RabbitMQ (AMQP: 5672, Management-UI: 15672)
+- gRPC-Server (Port 50051)
+- Zahlungssystem-Consumer
+- Camunda Workers
 
-#### Terminal 2: Zahlungssystem-Consumer starten
+Im Hintergrund starten (ohne Logs):
 
 ```bash
-mvn -pl zahlungssystem exec:java -Dexec.mainClass="com.example.zahlungsystem.ZahlungsConsumer"
+docker compose up -d
 ```
 
-Sie sollten sehen:
-```
-ZahlungsConsumer bereit. Warte auf Nachrichten in 'zahlungsauftraege'...
-```
-
-#### Terminal 3: Client ausführen
+Status prüfen:
 
 ```bash
-mvn -pl client exec:java -Dexec.mainClass="com.example.client.ClientApplication"
+docker compose ps
 ```
 
-Der Client liest Rechnungen aus `client/src/main/resources/rechnungen.xml`, sendet diese an den gRPC-Server und erzeugt Zahlungsaufträge.
 
-## Verarbeitung im Detail
+## Module
 
-### Ablauf einer Rechnungsverarbeitung:
+### gRPC-Server (`grpc/`)
 
-1. **Client liest XML**: Rechnungen werden aus `rechnungen.xml` gelesen
-2. **gRPC-Anfrage**: Rechnungsmetadaten werden an den gRPC-Server gesendet
-3. **Speicherung**: Der gRPC-Server speichert die Daten in seiner PostgreSQL-Datenbank
-4. **RabbitMQ**: Bei erfolgreicher Speicherung wird ein Zahlungsauftrag in die RabbitMQ-Queue geschrieben
-5. **Consumer**: Der Zahlungssystem-Consumer verarbeitet die Zahlungsaufträge
-6. **Speicherung & Verarbeitung**: Zahlungsaufträge werden mit Status verfolgt (AUSSTEHEND → IN_BEARBEITUNG → ABGESCHLOSSEN/FEHLGESCHLAGEN)
+- **Port:** 50051
+- **Proto-Definition:** [`rechnungs_metadata.proto`](grpc/src/main/proto/rechnungs_metadata.proto)
+- **RPC:** `SpeicherMetadaten` – validiert und persistiert Rechnungsmetadaten
+- **DB-Migrationen:** Flyway unter `grpc/src/main/resources/db/migration/`
+- **Container-Build:** `mvn -pl grpc jib:dockerBuild`
 
-## Datenbanken
+### Zahlungssystem (`zahlungssystem/`)
 
-### gRPC-Datenbank
+- **Queue:** `zahlungsauftraege`
+- **Consumer:** Verarbeitet Zahlungsaufträge asynchron
+- **Producer:** Stellt Zahlungsaufträge in die Queue
+- **DB-Migrationen:** Flyway unter `zahlungssystem/src/main/resources/db/migration/`
 
-- **Host**: localhost
-- **Port**: 5432
-- **Datenbank**: grpc
-- **Benutzer**: kunde
-- **Passwort**: p
+### Client (`client/`)
 
-Verbindung testen:
-```bash
-psql -h localhost -U kunde -d grpc
-```
+- Liest Rechnungen aus [`rechnungen.xml`](client/src/main/resources/rechnungen.xml)
+- Sendet diese per gRPC an den Server
+- Erstellt Zahlungsaufträge via `ZahlungsProducer`
 
-### Zahlungssystem-Datenbank
+### Camunda Workers (`camunda-workers/`)
 
-- **Host**: localhost
-- **Port**: 5433
-- **Datenbank**: zahlungssystem
-- **Benutzer**: kunde
-- **Passwort**: p
+- Verbindet sich mit Camunda 8 SaaS
+- **MetadatenSpeichernHandler:** Speichert Rechnungsdaten per gRPC
+- **ZahlungsserviceHandler:** Erstellt Zahlungsaufträge auf RabbitMQ
+- Resilient: liefert Ergebnis auch bei temporärer Service-Nichtverfügbarkeit zurück
 
-Verbindung testen:
-```bash
-psql -h localhost -U kunde -d zahlungssystem
-```
+## Konfiguration
 
-## RabbitMQ
+Alle Konfiguration erfolgt über Umgebungsvariablen (`.env`-Datei):
 
-- **Host**: localhost
-- **Port**: 5672 (AMQP)
-- **Port**: 15672 (Management-UI)
-- **Benutzer**: kunde
-- **Passwort**: p
-- **Queue**: zahlungsauftraege
-
-Management-UI öffnen:
-```
-http://localhost:15672
-```
-
-## Aufräumen
-
-### Services stoppen und entfernen
-
-```bash
-docker-compose -f extras/compose/backend/docker-compose.yml down
-```
-
-### Zusätzlich Volumes löschen (um Datenbankdaten zu entfernen)
-
-```bash
-docker-compose -f extras/compose/backend/docker-compose.yml down -v
-```
+| Variable | Beschreibung | Standard |
+|----------|-------------|----------|
+| `GRPC_DB_PORT` | PostgreSQL-Port (gRPC) | `5432` |
+| `GRPC_DB_URL` | JDBC-URL (gRPC) | `jdbc:postgresql://localhost:5432/grpc` |
+| `GRPC_DB_USERNAME` | DB-User | `kunde` |
+| `GRPC_DB_PASSWORD` | DB-Passwort | `p` |
+| `GRPC_DB_CLEAN` | Flyway clean bei Start | `true` |
+| `GRPC_HOST` | gRPC-Server Host | `localhost` |
+| `GRPC_PORT` | gRPC-Server Port | `50051` |
+| `RABBITMQ_HOST` | RabbitMQ Host | `localhost` |
+| `RABBITMQ_PORT` | RabbitMQ Port | `5672` |
+| `RABBITMQ_USERNAME` | RabbitMQ User | `kunde` |
+| `RABBITMQ_PASSWORD` | RabbitMQ Passwort | `p` |
+| `RABBITMQ_QUEUE_NAME` | Queue-Name | `zahlungsauftraege` |
+| `ZAHLUNGSSYSTEM_DB_PORT` | PostgreSQL-Port (Zahlung) | `5433` |
+| `ZAHLUNGSSYSTEM_DB_URL` | JDBC-URL (Zahlung) | `jdbc:postgresql://localhost:5433/zahlungssystem` |
+| `ZAHLUNGSSYSTEM_DB_CLEAN` | Flyway clean bei Start | `true` |
+| `CAMUNDA_CLIENT_MODE` | Camunda-Modus | `saas` |
+| `CAMUNDA_CLIENT_CLOUD_CLUSTER_ID` | Cluster-ID | – |
+| `CAMUNDA_CLIENT_CLOUD_REGION` | Region | `bru-2` |
+| `CAMUNDA_CLIENT_AUTH_CLIENT_ID` | OAuth Client-ID | – |
+| `CAMUNDA_CLIENT_AUTH_CLIENT_SECRET` | OAuth Secret | – |
 
 ## Entwicklung
 
 ### Code formatieren
 
-Das Projekt verwendet Google Java Format:
-
 ```bash
 mvn spotless:apply
 ```
 
-Code-Stil überprüfen:
+### Code-Stil prüfen
 
 ```bash
 mvn spotless:check
 ```
 
-### Nur ein Modul bauen
+### Einzelnes Modul bauen
 
 ```bash
 mvn -pl grpc clean install
 mvn -pl zahlungssystem clean install
 mvn -pl client clean install
+mvn -pl camunda-workers clean install
 ```
 
-### Logs anzeigen
+### Container-Images bauen
 
-Die Logs werden in die Konsole geschrieben. Für gRPC und Consumer verwenden Sie die Standard-Log-Ausgabe.
+```bash
+mvn -pl grpc,zahlungssystem,camunda-workers jib:dockerBuild
+```
+
+Erzeugt Images basierend auf `eclipse-temurin:25-jre-alpine`.
+
+## Debugging
+
+### Erwartete Startmeldungen
+
+| Service | Meldung |
+|---------|---------|
+| gRPC-Server | `gRPC-Server gestartet auf Port 50051` |
+| ZahlungsConsumer | `ZahlungsConsumer bereit. Warte auf Nachrichten in 'zahlungsauftraege'...` |
+
+### Datenbank inspizieren
+
+```bash
+# Rechnungsmetadaten
+psql -h localhost -p 5432 -U kunde -d grpc -c "SELECT * FROM rechnungsmetadaten;"
+
+# Zahlungsaufträge
+psql -h localhost -p 5433 -U kunde -d zahlungssystem -c "SELECT * FROM zahlungsauftraege;"
+```
+
+### RabbitMQ Management-UI
+
+```
+http://localhost:15672
+Benutzer: kunde | Passwort: p
+```
+
+### Häufige Fehler
+
+| Fehler | Ursache | Lösung |
+|--------|---------|--------|
+| `Connection refused :5432/:5433` | Docker-Services nicht gestartet | `docker compose up -d` |
+| `Connection refused :5672` | RabbitMQ nicht gestartet | Siehe oben |
+| `ClassNotFoundException` | Projekt nicht gebaut | `mvn clean install` |
+| Camunda-Verbindungsfehler | Falsche Credentials | `.env` prüfen (Cluster-ID, Client-ID, Secret) |
+
+## Aufräumen
+
+```bash
+# Services stoppen
+docker compose down
+
+# Inkl. Volumes (Datenbanken löschen)
+docker compose down -v
+```
 
 ## Projektstruktur
 
 ```
 rechnungsbearbeitung/
-├── grpc/                          # gRPC-Server Modul
-│   └── src/main/java/com/example/grpc/
-│       ├── GrpcServer.java        # Main-Klasse
-│       ├── config/                # Datenbank-Config
-│       ├── entity/                # JPA-Entities
-│       └── service/               # Business Logic
+├── docker-compose.yml                 # Root Compose (verweist auf backend)
+├── pom.xml                            # Parent POM (Java 25, Spotless)
+├── example.env                        # Umgebungsvariablen-Template
+├── DVG-Orchestrierung.drawio.svg      # Architekturdiagramm
 │
-├── zahlungssystem/                # Zahlungssystem Modul
-│   └── src/main/java/com/example/zahlungsystem/
-│       ├── ZahlungsConsumer.java  # Main-Klasse
-│       ├── ZahlungsProducer.java  # RabbitMQ Producer
-│       ├── config/                # Datenbank-Config
-│       ├── entity/                # Zahlungsauftrag
-│       └── repository/            # Datenzugriff
+├── grpc/                              # gRPC-Server
+│   ├── pom.xml
+│   └── src/main/
+│       ├── java/com/example/grpc/
+│       │   ├── GrpcServer.java
+│       │   ├── config/
+│       │   ├── entity/
+│       │   ├── repository/
+│       │   └── service/
+│       ├── proto/rechnungs_metadata.proto
+│       └── resources/db/migration/
 │
-├── client/                        # Client Modul
-│   ├── src/main/java/com/example/client/
-│   │   ├── ClientApplication.java # Main-Klasse
-│   │   └── ...
-│   └── src/main/resources/
-│       └── rechnungen.xml         # Eingabe-Rechnungen
+├── zahlungssystem/                    # Zahlungsverarbeitung
+│   ├── pom.xml
+│   └── src/main/java/com/example/zahlungssystem/
+│       ├── ZahlungsConsumer.java
+│       ├── ZahlungsProducer.java
+│       ├── config/
+│       ├── entity/
+│       └── repository/
 │
-├── extras/
-│   └── compose/                   # Docker Compose Konfigurationen
-│       ├── backend/
-│       ├── grpc/
-│       └── zahlungssystem/
+├── client/                            # Rechnungsimport-Client
+│   ├── pom.xml
+│   └── src/main/
+│       ├── java/com/example/client/
+│       │   ├── ClientApplication.java
+│       │   ├── RechnungClient.java
+│       │   ├── GrpcMapper.java
+│       │   ├── Rechnung.java
+│       │   └── Rechnungen.java
+│       └── resources/rechnungen.xml
 │
-├── example.env                    # Umgebungsvariablen Template
-├── pom.xml                        # Parent Maven POM
-└── README.md                      # Diese Datei
+├── camunda-workers/                   # Camunda 8 Job-Worker
+│   ├── pom.xml
+│   └── src/main/java/com/example/camundaworkers/
+│       ├── WorkerOrchestrator.java
+│       ├── AppConfig.java
+│       ├── GrpcClient.java
+│       ├── MetadatenSpeichernHandler.java
+│       └── ZahlungsserviceHandler.java
+│
+└── extras/compose/                    # Docker Compose
+    ├── backend/docker-compose.yml     # Alles zusammen
+    ├── grpc/docker-compose.yml        # PostgreSQL (gRPC)
+    └── zahlungssystem/docker-compose.yml  # PostgreSQL + RabbitMQ
 ```
-
-## Konfiguration
-
-Bearbeiten Sie die `.env`-Datei, um die Konfiguration anzupassen:
-
-```env
-# gRPC Datenbank
-GRPC_DB_PORT=5432
-GRPC_DB_USERNAME=kunde
-GRPC_DB_PASSWORD=p
-GRPC_DB_NAME=grpc
-
-# gRPC Server
-GRPC_HOST=localhost
-GRPC_PORT=50051
-
-# RabbitMQ
-RABBITMQ_HOST=localhost
-RABBITMQ_PORT=5672
-RABBITMQ_USERNAME=kunde
-RABBITMQ_PASSWORD=p
-RABBITMQ_QUEUE_NAME=zahlungsauftraege
-
-# Zahlungssystem Datenbank
-ZAHLUNGSSYSTEM_DB_PORT=5433
-ZAHLUNGSSYSTEM_DB_USERNAME=kunde
-ZAHLUNGSSYSTEM_DB_PASSWORD=p
-ZAHLUNGSSYSTEM_DB_NAME=zahlungssystem
-```
-
-## Debugging
-
-### Logs in den Services überprüfen
-
-Die Services geben Logs zur Konsole aus. Achten Sie auf:
-
-- `gRPC-Server gestartet auf Port 50051` → gRPC läuft
-- `ZahlungsConsumer bereit. Warte auf Nachrichten...` → Consumer läuft
-- Fehler bei der Datenbankverbindung → Docker-Services nicht gestartet
-- Connection refused auf Port 5672 → RabbitMQ nicht gestartet
-
-### Datenbankinhalte überprüfen
-
-```bash
-# Rechnungsmetadaten anzeigen
-psql -h localhost -U kunde -d grpc -c "SELECT * FROM rechnungsmetadaten;"
-
-# Zahlungsaufträge anzeigen
-psql -h localhost -U kunde -d zahlungssystem -c "SELECT * FROM zahlungsauftraege;"
-```
-
-### RabbitMQ Queue Status
-
-```bash
-# RabbitMQ Management UI
-http://localhost:15672 (Benutzer: kunde, Passwort: p)
-```
-
-## Häufige Probleme
-
-### Problem: "Connection refused" beim Start von gRPC oder Consumer
-
-**Lösung**: Docker-Services sind nicht gestartet:
-```bash
-docker-compose -f extras/compose/backend/docker-compose.yml up -d
-docker-compose -f extras/compose/backend/docker-compose.yml ps  # Status überprüfen
-```
-
-### Problem: "Port already in use"
-
-**Lösung**: Ein Service läuft bereits. Stoppen Sie alle:
-```bash
-docker-compose -f extras/compose/backend/docker-compose.yml down
-lsof -i :5432  # Prüfen, welcher Prozess den Port nutzt
-```
-
-### Problem: Client startet nicht / "Class not found"
-
-**Lösung**: Projekt nicht gebaut:
-```bash
-mvn clean install
-```
-
-### Problem: Datenbank wird nicht automatisch migriert
-
-**Lösung**: Stellen Sie sicher, dass `GRPC_DB_CLEAN=true` und `ZAHLUNGSSYSTEM_DB_CLEAN=true` in der `.env`-Datei gesetzt sind.
-
-## Zusätzliche Ressourcen
-
-- [gRPC Dokumentation](https://grpc.io/docs/)
-- [RabbitMQ Tutorials](https://www.rabbitmq.com/getstarted.html)
-- [PostgreSQL Dokumentation](https://www.postgresql.org/docs/)
-- [Maven Dokumentation](https://maven.apache.org/)
 
 ## Lizenz
 
-Siehe [LICENSE](LICENSE) Datei.
-
-## Gruppe 1
-
-Rechnungsbearbeitung System
+Siehe [LICENSE](LICENSE).
 
 ---
 
-**Letzte Aktualisierung**: April 2026 (1 Sprint)
-```
+**Letzte Aktualisierung**: Mai 2026
 
-Diese README bietet:
-
-✅ **Übersicht** des Projekts und der Architektur  
-✅ **Voraussetzungen** und Installationsschritte  
-✅ **Schritt-für-Schritt Anleitung** zum Starten aller Services  
-✅ **Detaillierte Erklärung** des Ablaufs  
-✅ **Konfigurationsoptionen**  
-✅ **Debugging-Tipps** und häufige Probleme  
-✅ **Projektstruktur** übersichtlich dargestellt  
-
-Du kannst diese README jetzt in dein Projekt kopieren und auf GitHub pushen!
-```
-
----KI-Hinweis
-Dieses Projekt und die zugehörige Dokumentation wurden durch die Unterstützung von Künstlicher Intelligenz (Gemini) optimiert und strukturiert. Die KI wurde gezielt eingesetzt, um:
-
-Die Architektur-Dokumentation zu strukturieren.
-
-Die Code-Formatierung (Spotless/Google Java Format) zu integrieren.
-
-Die README.md für eine bessere Lesbarkeit und Wartbarkeit aufzubereiten.

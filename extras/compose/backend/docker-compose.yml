@@ -1,3 +1,57 @@
 include:
   - path: ../grpc/docker-compose.yml
   - path: ../zahlungssystem/docker-compose.yml
+
+services:
+  grpc-server:
+    image: grpcservice:latest
+    ports:
+      - "${GRPC_PORT}:50051"
+    environment:
+      GRPC_DB_URL: jdbc:postgresql://database-grpc:5432/${GRPC_DB_NAME}
+      GRPC_DB_USERNAME: ${GRPC_DB_USERNAME}
+      GRPC_DB_PASSWORD: ${GRPC_DB_PASSWORD}
+      GRPC_DB_CLEAN: ${GRPC_DB_CLEAN}
+      GRPC_PORT: 50051
+    depends_on:
+      database-grpc:
+        condition: service_healthy
+
+  zahlungs-consumer:
+    image: zahlungssystem:latest
+    environment:
+      ZAHLUNGSSYSTEM_DB_URL: jdbc:postgresql://database-zahlungssystem:5432/${ZAHLUNGSSYSTEM_DB_NAME}
+      ZAHLUNGSSYSTEM_DB_USERNAME: ${ZAHLUNGSSYSTEM_DB_USERNAME}
+      ZAHLUNGSSYSTEM_DB_PASSWORD: ${ZAHLUNGSSYSTEM_DB_PASSWORD}
+      ZAHLUNGSSYSTEM_DB_CLEAN: ${ZAHLUNGSSYSTEM_DB_CLEAN}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_QUEUE_NAME: ${RABBITMQ_QUEUE_NAME}
+    depends_on:
+      database-zahlungssystem:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  camunda-workers:
+    image: camunda-workers:latest
+    environment:
+      GRPC_HOST: grpc-server
+      GRPC_PORT: 50051
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_QUEUE_NAME: ${RABBITMQ_QUEUE_NAME}
+      CAMUNDA_CLIENT_MODE: ${CAMUNDA_CLIENT_MODE}
+      CAMUNDA_CLIENT_CLOUD_CLUSTER_ID: ${CAMUNDA_CLIENT_CLOUD_CLUSTER_ID}
+      CAMUNDA_CLIENT_CLOUD_REGION: ${CAMUNDA_CLIENT_CLOUD_REGION}
+      CAMUNDA_CLIENT_AUTH_CLIENT_ID: ${CAMUNDA_CLIENT_AUTH_CLIENT_ID}
+      CAMUNDA_CLIENT_AUTH_CLIENT_SECRET: ${CAMUNDA_CLIENT_AUTH_CLIENT_SECRET}
+    depends_on:
+      grpc-server:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy

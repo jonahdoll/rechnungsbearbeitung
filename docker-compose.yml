@@ -1,0 +1,3 @@
+include:
+  - path: extras/compose/backend/docker-compose.yml
+
