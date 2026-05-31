@@ -1,6 +1,5 @@
 package com.example.camundaworkers;
 
-import com.example.zahlungsystem.ZahlungsProducer;
 import io.camunda.client.CamundaClient;
 import io.camunda.client.impl.oauth.OAuthCredentialsProviderBuilder;
 import java.net.URI;
@@ -22,14 +21,13 @@ public class WorkerOrchestrator {
   }
 
   private static void runWorkers(AppConfig config) throws Exception {
-    try (ZahlungsProducer paymentProducer = new ZahlungsProducer();
-        GrpcClient grpcClient = new GrpcClient();
+    try (GrpcClient grpcClient = new GrpcClient();
         CamundaClient camundaClient = createCamundaClient(config);
         var zahlungsserviceWorker =
             camundaClient
                 .newWorker()
                 .jobType("zahlungsservice-g1")
-                .handler(new ZahlungsserviceHandler(paymentProducer))
+                .handler(new ZahlungsserviceHandler())
                 .open();
         var metadatenWorker =
             camundaClient
