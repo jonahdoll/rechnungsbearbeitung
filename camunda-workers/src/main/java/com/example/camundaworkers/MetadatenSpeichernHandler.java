@@ -73,8 +73,8 @@ public class MetadatenSpeichernHandler implements JobHandler {
         logger.warn(
             "gRPC-Fehler: {} - {}", response.getResponseCode(), response.getResponsemessage());
         client
-            .newFailCommand(job.getKey())
-            .retries(0)
+            .newThrowErrorCommand(job.getKey())
+            .errorCode(String.valueOf(response.getResponseCode()))
             .errorMessage("gRPC-Fehler: " + response.getResponsemessage())
             .send()
             .join();
