@@ -14,6 +14,7 @@
 - [Entwicklung](#entwicklung)
 - [Debugging](#debugging)
 - [Lizenz](#lizenz)
+- [AI Hinweis](#ai-hinweis)
 
 ## Projektübersicht
 
@@ -31,19 +32,24 @@ Zusätzlich:
 - **ERP-System** – Externes System zum Eintragen der Rechnungsdaten
 
 ## Systemarchitektur
+### Workflow-Engine
 
 ![Systemarchitektur](DVG-Orchestrierung.drawio.svg)
 
+### Client
 ```
-Client ─── gRPC ───► gRPC-Server ───► PostgreSQL (Port 5432)
-                          │
-                          ▼
-                      RabbitMQ (Port 5672)
-                          │
-                          ▼
-                   ZahlungsConsumer ───► PostgreSQL (Port 5433)
+                       ┌─── gRPC ───► gRPC-Server ───► PostgreSQL (Port 5432)
+                       │
+Client ────────────────┤
+                       │
+                       └─── AMQP ───► RabbitMQ (Port 5672)
+                                            │
+                                            ▼
+                                     ZahlungsConsumer ───► PostgreSQL (Port 5433)
 
-Camunda 8 Cloud ◄───► Camunda Workers ───► gRPC-Server / RabbitMQ
+───────────────────────────────────────────────────────────────────────────────────
+
+Camunda 8 Cloud ◄────► Camunda Workers ────► gRPC-Server / RabbitMQ
 ```
 
 ## Tech-Stack
@@ -322,6 +328,9 @@ rechnungsbearbeitung/
 Siehe [LICENSE](LICENSE).
 
 ---
+
+## AI Hinweis
+*Mit Hilfe von Copilot generiert.*
 
 **Letzte Aktualisierung**: Mai 2026
 
