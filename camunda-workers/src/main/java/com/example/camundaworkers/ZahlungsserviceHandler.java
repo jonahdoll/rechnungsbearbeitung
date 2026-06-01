@@ -15,7 +15,15 @@ import org.slf4j.LoggerFactory;
 public class ZahlungsserviceHandler implements JobHandler {
   private static final Logger logger = LoggerFactory.getLogger(ZahlungsserviceHandler.class);
   public static final DateTimeFormatter FORMATTER =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+      new java.time.format.DateTimeFormatterBuilder()
+          .appendPattern("yyyy-MM-dd")
+          .optionalStart()
+          .appendPattern("'T'HH:mm:ss")
+          .optionalEnd()
+          .parseDefaulting(java.time.temporal.ChronoField.HOUR_OF_DAY, 0)
+          .parseDefaulting(java.time.temporal.ChronoField.MINUTE_OF_HOUR, 0)
+          .parseDefaulting(java.time.temporal.ChronoField.SECOND_OF_MINUTE, 0)
+          .toFormatter();
 
   public ZahlungsserviceHandler() {}
 
