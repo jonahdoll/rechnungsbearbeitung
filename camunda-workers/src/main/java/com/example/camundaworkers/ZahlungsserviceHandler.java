@@ -34,7 +34,7 @@ public class ZahlungsserviceHandler implements JobHandler {
     try {
       Zahlungsauftrag auftrag =
           new Zahlungsauftrag(
-              (String) vars.get("rechnungsId"),
+              (String) vars.get("rechnungsnummer"),
               new BigDecimal(vars.getOrDefault("gesamtbetrag", "0").toString()),
               (String) vars.get("iban"),
               LocalDateTime.parse((String) vars.get("faelligkeitsdatum"), FORMATTER));
