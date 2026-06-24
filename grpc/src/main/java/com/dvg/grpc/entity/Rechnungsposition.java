@@ -1,6 +1,6 @@
-package com.example.grpc.entity;
+package com.dvg.grpc.entity;
 
-import com.example.grpc.RechnungsMetadata;
+import com.dvg.grpc.RechnungsMetadata;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

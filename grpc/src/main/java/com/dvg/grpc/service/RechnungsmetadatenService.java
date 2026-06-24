@@ -1,11 +1,11 @@
-package com.example.grpc.service;
+package com.dvg.grpc.service;
 
-import com.example.grpc.RechnungsMetadata;
-import com.example.grpc.RechnungsmetadatenServiceGrpc;
-import com.example.grpc.config.DatabaseConfig;
-import com.example.grpc.entity.Rechnungsmetadaten;
-import com.example.grpc.repository.RechnungsMetadatenRepository;
-import com.example.grpc.repository.RechnungspositionRepository;
+import com.dvg.grpc.RechnungsMetadata;
+import com.dvg.grpc.RechnungsmetadatenServiceGrpc;
+import com.dvg.grpc.config.DatabaseConfig;
+import com.dvg.grpc.entity.Rechnungsmetadaten;
+import com.dvg.grpc.repository.RechnungsMetadatenRepository;
+import com.dvg.grpc.repository.RechnungspositionRepository;
 import io.grpc.stub.StreamObserver;
 import jakarta.validation.ConstraintViolationException;
 import java.sql.Connection;

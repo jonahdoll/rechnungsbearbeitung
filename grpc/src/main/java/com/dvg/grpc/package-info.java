@@ -1,2 +1,2 @@
 /// Basispackage für den gRPC-Rechnungsmetadatendienst.
-package com.example.grpc;
+package com.dvg.grpc;

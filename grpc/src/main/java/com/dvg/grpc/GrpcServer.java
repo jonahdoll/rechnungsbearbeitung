@@ -1,7 +1,8 @@
-package com.example.grpc;
+package com.dvg.grpc;
 
-import com.example.grpc.config.DatabaseMigration;
-import com.example.grpc.service.RechnungsmetadatenService;
+import com.dvg.grpc.config.DatabaseConfig;
+import com.dvg.grpc.config.DatabaseMigration;
+import com.dvg.grpc.service.RechnungsmetadatenService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import java.io.IOException;
@@ -40,7 +41,7 @@ public class GrpcServer {
                         Thread.currentThread().interrupt();
                       }
                       logger.info("Schließe Datenbankverbindungspool...");
-                      com.example.grpc.config.DatabaseConfig.shutdown();
+                      DatabaseConfig.shutdown();
                     }));
 
     server.awaitTermination();

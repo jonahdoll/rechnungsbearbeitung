@@ -1,6 +1,6 @@
-package com.example.grpc.repository;
+package com.dvg.grpc.repository;
 
-import com.example.grpc.entity.Rechnungsmetadaten;
+import com.dvg.grpc.entity.Rechnungsmetadaten;
 import java.sql.*;
 import java.util.UUID;
 import javax.sql.DataSource;

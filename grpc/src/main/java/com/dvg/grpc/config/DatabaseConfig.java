@@ -1,4 +1,4 @@
-package com.example.grpc.config;
+package com.dvg.grpc.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

@@ -1,4 +1,4 @@
-package com.example.grpc.config;
+package com.dvg.grpc.config;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.flywaydb.core.Flyway;

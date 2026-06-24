@@ -1,6 +1,6 @@
-package com.example.grpc.repository;
+package com.dvg.grpc.repository;
 
-import com.example.grpc.entity.Rechnungsposition;
+import com.dvg.grpc.entity.Rechnungsposition;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
