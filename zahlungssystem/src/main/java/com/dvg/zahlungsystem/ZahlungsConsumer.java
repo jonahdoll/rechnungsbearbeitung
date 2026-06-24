@@ -1,10 +1,10 @@
-package com.example.zahlungsystem;
+package com.dvg.zahlungsystem;
 
-import com.example.zahlungsystem.config.DatabaseConfig;
-import com.example.zahlungsystem.config.DatabaseMigration;
-import com.example.zahlungsystem.entity.Zahlungsauftrag;
-import com.example.zahlungsystem.repository.ZahlungsStatusType;
-import com.example.zahlungsystem.repository.ZahlungsauftragRepository;
+import com.dvg.zahlungsystem.config.DatabaseConfig;
+import com.dvg.zahlungsystem.config.DatabaseMigration;
+import com.dvg.zahlungsystem.entity.Zahlungsauftrag;
+import com.dvg.zahlungsystem.repository.ZahlungsStatusType;
+import com.dvg.zahlungsystem.repository.ZahlungsauftragRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;

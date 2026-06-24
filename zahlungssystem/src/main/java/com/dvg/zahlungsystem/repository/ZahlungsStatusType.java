@@ -1,4 +1,4 @@
-package com.example.zahlungsystem.repository;
+package com.dvg.zahlungsystem.repository;
 
 public enum ZahlungsStatusType {
   AUSSTEHEND,

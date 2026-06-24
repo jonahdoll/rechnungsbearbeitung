@@ -1,4 +1,4 @@
-package com.example.zahlungsystem.config;
+package com.dvg.zahlungsystem.config;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.flywaydb.core.Flyway;

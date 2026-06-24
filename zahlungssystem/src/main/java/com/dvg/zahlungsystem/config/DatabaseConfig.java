@@ -1,4 +1,4 @@
-package com.example.zahlungsystem.config;
+package com.dvg.zahlungsystem.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

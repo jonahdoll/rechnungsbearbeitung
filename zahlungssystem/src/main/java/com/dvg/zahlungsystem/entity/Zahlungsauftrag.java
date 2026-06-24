@@ -1,4 +1,4 @@
-package com.example.zahlungsystem.entity;
+package com.dvg.zahlungsystem.entity;
 
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

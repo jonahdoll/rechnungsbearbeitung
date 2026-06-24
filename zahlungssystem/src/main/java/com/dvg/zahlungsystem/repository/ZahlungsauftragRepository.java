@@ -1,6 +1,6 @@
-package com.example.zahlungsystem.repository;
+package com.dvg.zahlungsystem.repository;
 
-import com.example.zahlungsystem.entity.Zahlungsauftrag;
+import com.dvg.zahlungsystem.entity.Zahlungsauftrag;
 import java.sql.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
