@@ -91,7 +91,7 @@
 </from>
 <to><image>zahlungssystem</image></to>
 <container>
-<mainClass>com.example.zahlungsystem.ZahlungsConsumer</mainClass>
+<mainClass>com.dvg.zahlungsystem.ZahlungsConsumer</mainClass>
 </container>
 </configuration>
 </plugin>

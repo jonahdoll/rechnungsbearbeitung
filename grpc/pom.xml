@@ -127,7 +127,7 @@
             <configuration>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>com.example.grpc.GrpcServer</mainClass>
+                  <mainClass>com.dvg.grpc.GrpcServer</mainClass>
                 </transformer>
               </transformers>
             </configuration>
@@ -147,7 +147,7 @@
           </from>
           <to><image>${jib.image}</image></to>
           <container>
-            <mainClass>com.example.grpc.GrpcServer</mainClass>
+            <mainClass>com.dvg.grpc.GrpcServer</mainClass>
             <ports><port>50051</port></ports>
           </container>
         </configuration>
