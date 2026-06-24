@@ -1,6 +1,7 @@
-package com.example.client;
+package com.dvg.client;
 
-import com.example.zahlungsystem.entity.Zahlungsauftrag;
+import com.dvg.zahlungsystem.ZahlungsProducer;
+import com.dvg.zahlungsystem.entity.Zahlungsauftrag;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.LocalDateTime;
@@ -53,7 +54,7 @@ public class ClientApplication {
   }
 
   private static void sendeZahlungsauftrag(Rechnung r) throws Exception {
-    try (var producer = new com.example.zahlungsystem.ZahlungsProducer()) {
+    try (var producer = new ZahlungsProducer()) {
       producer.sendeZahlungsauftrag(
           new Zahlungsauftrag(
               r.getRechnungsnummer(),

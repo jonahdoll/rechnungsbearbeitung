@@ -1,7 +1,7 @@
-package com.example.client;
+package com.dvg.client;
 
-import com.example.grpc.RechnungsMetadata;
-import com.example.grpc.RechnungsmetadatenServiceGrpc;
+import com.dvg.grpc.RechnungsMetadata;
+import com.dvg.grpc.RechnungsmetadatenServiceGrpc;
 import com.google.protobuf.Timestamp;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.grpc.ManagedChannel;

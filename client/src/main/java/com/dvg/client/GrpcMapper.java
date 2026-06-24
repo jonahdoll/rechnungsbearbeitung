@@ -1,6 +1,6 @@
-package com.example.client;
+package com.dvg.client;
 
-import com.example.grpc.RechnungsMetadata;
+import com.dvg.grpc.RechnungsMetadata;
 
 public class GrpcMapper {
   public RechnungsMetadata.Rechnungsposition mapToGrpc(Position position) {
