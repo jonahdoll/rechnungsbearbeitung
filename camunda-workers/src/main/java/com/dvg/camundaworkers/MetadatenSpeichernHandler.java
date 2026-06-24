@@ -1,7 +1,7 @@
-package com.example.camundaworkers;
+package com.dvg.camundaworkers;
 
-import com.example.grpc.RechnungsMetadata;
-import com.example.grpc.RechnungsmetadatenServiceGrpc;
+import com.dvg.grpc.RechnungsMetadata;
+import com.dvg.grpc.RechnungsmetadatenServiceGrpc;
 import com.google.protobuf.Timestamp;
 import io.camunda.client.api.response.ActivatedJob;
 import io.camunda.client.api.worker.JobClient;

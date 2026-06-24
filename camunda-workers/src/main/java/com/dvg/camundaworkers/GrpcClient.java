@@ -1,6 +1,6 @@
-package com.example.camundaworkers;
+package com.dvg.camundaworkers;
 
-import com.example.grpc.RechnungsmetadatenServiceGrpc;
+import com.dvg.grpc.RechnungsmetadatenServiceGrpc;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;

@@ -1,4 +1,4 @@
-package com.example.camundaworkers;
+package com.dvg.camundaworkers;
 
 import io.github.cdimascio.dotenv.Dotenv;
 

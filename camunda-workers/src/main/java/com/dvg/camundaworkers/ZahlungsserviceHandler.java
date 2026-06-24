@@ -1,7 +1,7 @@
-package com.example.camundaworkers;
+package com.dvg.camundaworkers;
 
-import com.example.zahlungsystem.ZahlungsProducer;
-import com.example.zahlungsystem.entity.Zahlungsauftrag;
+import com.dvg.zahlungsystem.ZahlungsProducer;
+import com.dvg.zahlungsystem.entity.Zahlungsauftrag;
 import io.camunda.client.api.response.ActivatedJob;
 import io.camunda.client.api.worker.JobClient;
 import io.camunda.client.api.worker.JobHandler;

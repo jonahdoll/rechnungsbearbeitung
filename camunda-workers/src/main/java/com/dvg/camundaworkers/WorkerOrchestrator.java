@@ -1,4 +1,4 @@
-package com.example.camundaworkers;
+package com.dvg.camundaworkers;
 
 import io.camunda.client.CamundaClient;
 import io.camunda.client.impl.oauth.OAuthCredentialsProviderBuilder;
